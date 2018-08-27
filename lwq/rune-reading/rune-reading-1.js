@@ -1,6 +1,6 @@
 function fractal(pic, n) {
     // your answer here
-    return (n === 2) ? beside(pic, stack(pic, pic))
+    return (n === 1) ? pic
                      : beside(pic, stack(fractal(pic, n-1),fractal(pic, n-1)));
 }
 
