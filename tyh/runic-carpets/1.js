@@ -35,7 +35,7 @@ function persian(rune, count) {
 
 module.exports = {
     f: function(a,b){
-            return nova_bb;
+            return persian(a,b);
         }
 }
 
