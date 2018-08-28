@@ -1,3 +1,5 @@
+require('../../rune-library');
+
 function beside_frac(pic1, pic2, n){
     return quarter_turn_right(
         stack_frac(
@@ -31,5 +33,13 @@ function persian(rune, count) {
                       besiden(count,rune));
 }
 
+module.exports = {
+    f: function(a,b){
+            return nova_bb;
+        }
+}
+
 // Test
-show(persian(nova_bb, 9));
+// show(persian(nova_bb, 9));
+
+// console.log(__are_pictures_equal(nova_bb,heart_bb));

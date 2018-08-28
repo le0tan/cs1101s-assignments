@@ -1,3 +1,5 @@
+require('../../rune-library');
+
 function persian(rune, count) {
     return stack_frac(
         1 - 1 / count,
@@ -28,5 +30,11 @@ function persian(rune, count) {
         );
 }
 
+module.exports = {
+    f: function(a,b){
+            return nova_bb;
+        }
+}
+
 // Test
-show(persian(make_cross(rcross_bb), 5));
+// show(persian(make_cross(rcross_bb), 5));
