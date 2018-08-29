@@ -1,3 +1,63 @@
+/**
+ * @fileoverview gl-matrix - High performance matrix and vector operations
+ * @author Brandon Jones
+ * @author Colin MacKenzie IV
+ * @version 2.2.2
+ */
+
+/* Copyright (c) 2013, Brandon Jones, Colin MacKenzie IV. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+
+
+(function(_global) {
+  "use strict";
+
+  var shim = {};
+      shim.exports = typeof(window) !== 'undefined' ? window : _global;
+
+  (function(exports) {
+    /* Copyright (c) 2013, Brandon Jones, Colin MacKenzie IV. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation 
+    and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
+
+
 if(!GLMAT_EPSILON) {
     var GLMAT_EPSILON = 0.000001;
 }
@@ -4219,677 +4279,23 @@ quat.fromMat3 = function(out, m) {
 quat.str = function (a) {
     return 'quat(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' + a[3] + ')';
 };
-var viewport_size = 512; // This is the height of the viewport
-// while a curve is approximated by a polygon,
-// the side of the polygon will be no longer than maxArcLength pixels
-var maxArcLength = 20;
 
-/*-----------------------Some class definitions----------------------*/
-function PrimaryShape(first, count) {
-  this.isPrimary = true; // this is a primary shape
-  this.first = first; // the first index in the index buffer
-  // that belongs to this shape
-  this.count = count; // number of indices to draw the shape
+if(typeof(exports) !== 'undefined') {
+    exports.quat = quat;
 }
+;
 
-function Shape() {
-  this.isPrimary = false;
-  this.transMatrix = mat4.create();
-  this.shapes = [];
-  this.color = undefined;
-}
 
-// set the transformation matrix related to the shape
-Shape.prototype.setM = function(matrix) {
-  this.transMatrix = matrix;
-};
 
-// get the transformation matrix related to the shape
-Shape.prototype.getM = function() {
-  return this.transMatrix;
-};
 
-// get the sub-shapes (array) of the shape
-Shape.prototype.getS = function() {
-  return this.shapes;
-};
 
-Shape.prototype.setS = function(shapes) {
-  this.shapes = shapes;
-};
 
-Shape.prototype.addS = function(shape) {
-  this.shapes.push(shape);
-};
 
-Shape.prototype.getColor = function() {
-  return this.color;
-};
 
-Shape.prototype.setColor = function(color) {
-  this.color = color;
-};
 
-/*-----------------Initialize vertex and index buffer----------------*/
-// vertices is an array of points
-// Each point has the following attribute, in that order:
-// x, y, z, t
-// (will be converted to Float32Array later)
-var vertices = [
-  // center
-  0.0,
-  0.0,
-  0.0,
-  1.0,
-  // 4 corners and 4 sides' midpoints
-  1.0,
-  0.0,
-  0.0,
-  1.0,
-  1.0,
-  1.0,
-  0.0,
-  1.0,
-  0.0,
-  1.0,
-  0.0,
-  1.0,
-  -1.0,
-  1.0,
-  0.0,
-  1.0,
-  -1.0,
-  0.0,
-  0.0,
-  1.0,
-  -1.0,
-  -1.0,
-  0.0,
-  1.0,
-  0.0,
-  -1.0,
-  0.0,
-  1.0,
-  1.0,
-  -1.0,
-  0.0,
-  1.0,
-  // for rcross_bb
-  0.5,
-  0.5,
-  0.0,
-  1.0,
-  -0.5,
-  0.5,
-  0.0,
-  1.0,
-  -0.5,
-  -0.5,
-  0.0,
-  1.0,
-  0.5,
-  -0.5,
-  0.0,
-  1.0,
-  // for nova_bb
-  0.0,
-  0.5,
-  0.0,
-  1.0,
-  -0.5,
-  0.0,
-  0.0,
-  1.0
-];
-// indices is an array of indices, each refer to a point in vertices
-// (will be converted to Uint16Array later)
-var indices = [
-  // black_bb
-  2,
-  4,
-  6,
-  2,
-  6,
-  8,
-  // rcross_bb
-  2,
-  4,
-  10,
-  2,
-  9,
-  10,
-  2,
-  9,
-  12,
-  2,
-  12,
-  8,
-  10,
-  11,
-  12,
-  // sail_bb
-  7,
-  8,
-  3,
-  // corner_bb
-  1,
-  2,
-  3,
-  // nova_bb
-  3,
-  0,
-  14,
-  13,
-  0,
-  1
-];
 
-function makeCircle() {
-  // draw a polygon with many vertices to approximate a circle
-  var centerVerInd = 0;
-  var firstVer = vertices.length / 4;
-  var firstInd = indices.length;
-  var numPoints = Math.ceil(Math.PI * viewport_size / maxArcLength);
-  // generate points and store it in the vertex buffer
-  for (var i = 0; i < numPoints; i++) {
-    var angle = Math.PI * 2 * i / numPoints;
-    vertices.push(Math.cos(angle), Math.sin(angle), 0, 1);
-  }
-  // generate indices for the triangles and store in the index buffer
-  for (var i = firstVer; i < firstVer + numPoints - 1; i++) {
-    indices.push(centerVerInd, i, i + 1);
-  }
-  indices.push(centerVerInd, firstVer, firstVer + numPoints - 1);
-  var count = 3 * numPoints;
-  return new PrimaryShape(firstInd, count);
-}
 
-function makeHeart() {
-  var bottomMidInd = 7;
-  var firstVer = vertices.length / 4;
-  var firstInd = indices.length;
-  var root2 = Math.sqrt(2);
-  var r = 4 / (2 + 3 * root2);
-  var scaleX = 1 / (r * (1 + root2 / 2));
-  var numPoints = Math.ceil(Math.PI / 2 * viewport_size * r / maxArcLength);
-  // right semi-circle
-  var rightCenterX = r / root2;
-  var rightCenterY = 1 - r;
-  for (var i = 0; i < numPoints; i++) {
-    var angle = Math.PI * (-1 / 4 + i / numPoints);
-    vertices.push(
-      (Math.cos(angle) * r + rightCenterX) * scaleX,
-      Math.sin(angle) * r + rightCenterY,
-      0,
-      1
-    );
-  }
-  // left semi-circle
-  var leftCenterX = -r / root2;
-  var leftCenterY = 1 - r;
-  for (var i = 0; i <= numPoints; i++) {
-    var angle = Math.PI * (1 / 4 + i / numPoints);
-    vertices.push(
-      (Math.cos(angle) * r + leftCenterX) * scaleX,
-      Math.sin(angle) * r + leftCenterY,
-      0,
-      1
-    );
-  }
-  // update index buffer
-  for (var i = firstVer; i < firstVer + 2 * numPoints; i++) {
-    indices.push(bottomMidInd, i, i + 1);
-  }
-  var count = 3 * 2 * numPoints;
-  return new PrimaryShape(firstInd, count);
-}
 
-function makePentagram() {
-  var firstVer = vertices.length / 4;
-  var firstInd = indices.length;
 
-  var v1 = Math.sin(Math.PI / 10);
-  var v2 = Math.cos(Math.PI / 10);
-
-  var w1 = Math.sin(3 * Math.PI / 10);
-  var w2 = Math.cos(3 * Math.PI / 10);
-
-  vertices.push(v2, v1, 0, 1);
-  vertices.push(w2, -w1, 0, 1);
-  vertices.push(-w2, -w1, 0, 1);
-  vertices.push(-v2, v1, 0, 1);
-  vertices.push(0, 1, 0, 1);
-
-  for (var i = 0; i < 5; i++) {
-    indices.push(0, firstVer + i, firstVer + (i + 2) % 5);
-  }
-
-  return new PrimaryShape(firstInd, 15);
-}
-
-function makeRibbon() {
-  var firstVer = vertices.length / 4;
-  var firstInd = indices.length;
-
-  var theta_max = 30;
-  var thickness = -1 / theta_max;
-  var unit = 0.1;
-
-  for (var i = 0; i < theta_max; i += unit) {
-    vertices.push(
-      i / theta_max * Math.cos(i),
-      i / theta_max * Math.sin(i),
-      0,
-      1
-    );
-    vertices.push(
-      Math.abs(Math.cos(i) * thickness) + i / theta_max * Math.cos(i),
-      Math.abs(Math.sin(i) * thickness) + i / theta_max * Math.sin(i),
-      0,
-      1
-    );
-  }
-
-  var totalPoints = Math.ceil(theta_max / unit) * 2;
-
-  for (var i = firstVer; i < firstVer + totalPoints - 2; i++) {
-    indices.push(i, i + 1, i + 2);
-  }
-
-  return new PrimaryShape(firstInd, 3 * totalPoints - 6);
-}
-
-var black_bb = new PrimaryShape(0, 6);
-var blank_bb = new PrimaryShape(0, 0);
-var rcross_bb = new PrimaryShape(6, 15);
-var sail_bb = new PrimaryShape(21, 3);
-var corner_bb = new PrimaryShape(24, 3);
-var nova_bb = new PrimaryShape(27, 6);
-var circle_bb = makeCircle();
-var heart_bb = makeHeart();
-var pentagram_bb = makePentagram();
-var ribbon_bb = makeRibbon();
-
-// convert vertices and indices to typed arrays
-vertices = new Float32Array(vertices);
-indices = new Uint16Array(indices);
-
-/*-----------------------Drawing functions----------------------*/
-module.exports = { 
-    generateFlattenedShapeList : function (shape) {
-  var matStack = [];
-  var matrix = mat4.create();
-  var shape_list = {};
-  function pushMat() {
-    matStack.push(mat4.clone(matrix));
-  }
-  function popMat() {
-    if (matStack.length == 0) {
-      throw 'Invalid pop matrix!';
-    } else {
-      matrix = matStack.pop();
-    }
-  }
-  function helper(shape, color) {
-    if (shape.isPrimary) {
-      if (shape.count === 0) {
-        // this is blank_bb, do nothing
-        return;
-      }
-      if (!shape_list[shape.first]) {
-        shape_list[shape.first] = {
-          shape: shape,
-          matrices: [],
-          colors: []
-        };
-      }
-      shape_list[shape.first].matrices.push(matrix);
-      shape_list[shape.first].colors.push(color || [0, 0, 0, 1]);
-    } else {
-      if (color === undefined && shape.getColor() !== undefined) {
-        color = shape.getColor();
-      }
-      pushMat();
-      mat4.multiply(matrix, matrix, shape.getM());
-      var childShapes = shape.getS();
-      for (var i = 0; i < childShapes.length; i++) {
-        helper(childShapes[i], color);
-      }
-      popMat();
-    }
-  }
-  function flatten(matrices, colors) {
-    var instanceArray = new Float32Array(matrices.length * 20);
-    for (var i = 0; i < matrices.length; i++) {
-      instanceArray.set(matrices[i], 20 * i);
-      instanceArray.set(colors[i], 20 * i + 16);
-    }
-    return instanceArray;
-  }
-  helper(shape);
-  var flattened_shape_list = [];
-  // draw a white square background first
-  flattened_shape_list.push({
-    shape: black_bb,
-    instanceArray: new Float32Array([
-      1,
-      0,
-      0,
-      0,
-      0,
-      1,
-      0,
-      0,
-      0,
-      0,
-      1,
-      0,
-      0,
-      0,
-      -1,
-      1,
-      1,
-      1,
-      1,
-      1
-    ])
-  });
-  for (var key in shape_list) {
-    if (shape_list.hasOwnProperty(key)) {
-      var shape = shape_list[key].shape;
-      var instanceArray = flatten(
-        shape_list[key].matrices,
-        shape_list[key].colors
-      );
-      flattened_shape_list.push({ shape: shape, instanceArray: instanceArray });
-    }
-  }
-  return flattened_shape_list;
-}
-}
-
-var _ = require('lodash');
-
-function __compile(shape) {
-  var shape_list = generateFlattenedShapeList(shape);
-  var cleaned_shape_list = shape_list.map(function (obj) {
-      var shape = obj.shape;
-      var instanceArray = _.mapValues(obj.instanceArray, function (value) {
-          return parseFloat(value.toFixed(3));
-      });
-      return {
-          shape: shape,
-          instanceArray: instanceArray
-      };
-  });
-  return cleaned_shape_list;
-}
-
-function __are_pictures_equal(shape0, shape1) {
-    var compiled_shape0 = __compile(shape0);
-    var compiled_shape1 = __compile(shape1);
-    return _.isEqual(compiled_shape0, compiled_shape1);
-}
-
-/*-----------------------Color functions----------------------*/
-function hexToColor(hex) {
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return [
-    parseInt(result[1], 16) / 255,
-    parseInt(result[2], 16) / 255,
-    parseInt(result[3], 16) / 255,
-    1
-  ];
-}
-
-function addColorFromHex(shape, hex) {
-  var wrapper = new Shape();
-  wrapper.addS(shape);
-  wrapper.setColor(hexToColor(hex));
-  return wrapper;
-}
-
-function random_color(shape) {
-  var wrapper = new Shape();
-  wrapper.addS(shape);
-  var randomColor = hexToColor(
-    colorPalette[Math.floor(Math.random() * colorPalette.length)]
-  );
-  wrapper.setColor(randomColor);
-  return wrapper;
-}
-
-// black and white not included because they are boring colors
-// colorPalette is used in generateFlattenedShapeList to generate a random color
-var colorPalette = [
-  '#F44336',
-  '#E91E63',
-  '#AA00FF',
-  '#3F51B5',
-  '#2196F3',
-  '#4CAF50',
-  '#FFEB3B',
-  '#FF9800',
-  '#795548'
-];
-
-function red(shape) {
-  return addColorFromHex(shape, '#F44336');
-}
-
-function pink(shape) {
-  return addColorFromHex(shape, '#E91E63');
-}
-
-function purple(shape) {
-  return addColorFromHex(shape, '#AA00FF');
-}
-
-function indigo(shape) {
-  return addColorFromHex(shape, '#3F51B5');
-}
-
-function blue(shape) {
-  return addColorFromHex(shape, '#2196F3');
-}
-
-function green(shape) {
-  return addColorFromHex(shape, '#4CAF50');
-}
-
-function yellow(shape) {
-  return addColorFromHex(shape, '#FFEB3B');
-}
-
-function orange(shape) {
-  return addColorFromHex(shape, '#FF9800');
-}
-
-function brown(shape) {
-  return addColorFromHex(shape, '#795548');
-}
-
-function black(shape) {
-  return addColorFromHex(shape, '#000000');
-}
-
-function white(shape) {
-  return addColorFromHex(shape, '#FFFFFF');
-}
-
-/*-----------------------Transformation functions----------------------*/
-function scale_independent(ratio_x, ratio_y, shape) {
-  var scaleVec = vec3.fromValues(ratio_x, ratio_y, 1);
-  var scaleMat = mat4.create();
-  mat4.scale(scaleMat, scaleMat, scaleVec);
-  var wrapper = new Shape();
-  wrapper.addS(shape);
-  wrapper.setM(scaleMat);
-  return wrapper;
-}
-
-function scale(ratio, shape) {
-  return scale_independent(ratio, ratio, shape);
-}
-
-function translate(x, y, shape) {
-  var translateVec = vec3.fromValues(x, -y, 0);
-  var translateMat = mat4.create();
-  mat4.translate(translateMat, translateMat, translateVec);
-  var wrapper = new Shape();
-  wrapper.addS(shape);
-  wrapper.setM(translateMat);
-  return wrapper;
-}
-
-function rotate(rad, shape) {
-  var rotateMat = mat4.create();
-  mat4.rotateZ(rotateMat, rotateMat, rad);
-  var wrapper = new Shape();
-  wrapper.addS(shape);
-  wrapper.setM(rotateMat);
-  return wrapper;
-}
-
-function stack_frac(frac, shape1, shape2) {
-  var upper = translate(0, -(1 - frac), scale_independent(1, frac, shape1));
-  var lower = translate(0, frac, scale_independent(1, 1 - frac, shape2));
-  var combined = new Shape();
-  combined.setS([upper, lower]);
-  return combined;
-}
-
-function stack(shape1, shape2) {
-  return stack_frac(1 / 2, shape1, shape2);
-}
-
-function stackn(n, shape) {
-  if (n === 1) {
-    return shape;
-  } else {
-    return stack_frac(1 / n, shape, stackn(n - 1, shape));
-  }
-}
-
-function quarter_turn_right(shape) {
-  return rotate(-Math.PI / 2, shape);
-}
-
-function quarter_turn_left(shape) {
-  return rotate(Math.PI / 2, shape);
-}
-
-function turn_upside_down(shape) {
-  return rotate(Math.PI, shape);
-}
-
-function beside_frac(frac, shape1, shape2) {
-  var left = translate(-(1 - frac), 0, scale_independent(frac, 1, shape1));
-  var right = translate(frac, 0, scale_independent(1 - frac, 1, shape2));
-  var combined = new Shape();
-  combined.setS([left, right]);
-  return combined;
-}
-
-function beside(shape1, shape2) {
-  return beside_frac(1 / 2, shape1, shape2);
-}
-
-function flip_vert(shape) {
-  return scale_independent(1, -1, shape);
-}
-
-function flip_horiz(shape) {
-  return scale_independent(-1, 1, shape);
-}
-
-function make_cross(shape) {
-  return stack(
-    beside(quarter_turn_right(shape), rotate(Math.PI, shape)),
-    beside(shape, rotate(Math.PI / 2, shape))
-  );
-}
-
-function repeat_pattern(n, pattern, shape) {
-  if (n === 0) {
-    return shape;
-  } else {
-    return pattern(repeat_pattern(n - 1, pattern, shape));
-  }
-}
-
-function overlay_frac(frac, shape1, shape2) {
-  var front = new Shape();
-  front.addS(shape1);
-  var frontMat = front.getM();
-  // z: scale by frac
-  mat4.scale(frontMat, frontMat, vec3.fromValues(1, 1, frac));
-
-  var back = new Shape();
-  back.addS(shape2);
-  var backMat = back.getM();
-  // z: scale by (1-frac), translate by -frac
-  mat4.scale(
-    backMat,
-    mat4.translate(backMat, backMat, vec3.fromValues(0, 0, -frac)),
-    vec3.fromValues(1, 1, 1 - frac)
-  );
-
-  var combined = new Shape();
-  combined.setS([front, back]); // render front first to avoid redrawing
-  return combined;
-}
-
-function overlay(shape1, shape2) {
-  return overlay_frac(0.5, shape1, shape2);
-}
-
-// colours
-global.red = red;
-global.pink = pink;
-global.purple = purple;
-global.indigo = indigo;
-global.blue = blue;
-global.green = green;
-global.yellow = yellow;
-global.orange = orange;
-global.brown = brown;
-global.black = black;
-global.white = white;
-global.random_color = random_color;
-
-// runes
-global.black_bb = black_bb;
-global.blank_bb = blank_bb;
-global.rcross_bb = rcross_bb;
-global.sail_bb = sail_bb;
-global.corner_bb = corner_bb;
-global.nova_bb = nova_bb;
-global.circle_bb = circle_bb;
-global.heart_bb = heart_bb;
-global.pentagram_bb = pentagram_bb;
-global.ribbon_bb = ribbon_bb;
-
-// transforms
-global.quarter_turn_left = quarter_turn_left;
-global.quarter_turn_right = quarter_turn_right;
-global.turn_upside_down = turn_upside_down;
-global.scale_independent = scale_independent;
-global.scale = scale;
-global.translate = translate;
-global.rotate = rotate;
-global.stack_frac = stack_frac;
-global.stack = stack;
-global.stackn = stackn;
-global.beside_frac = beside_frac;
-global.beside = beside;
-global.flip_vert = flip_vert;
-global.flip_horiz = flip_horiz;
-global.make_cross = make_cross;
-global.repeat_pattern = repeat_pattern;
-global.overlay_frac = overlay_frac;
-global.overlay = overlay;
-
-// internal utilities
-global.__compile = __compile;
-global.__are_pictures_equal = __are_pictures_equal;
+  })(shim.exports);
+})(this);

@@ -1,5 +1,5 @@
 require('../../rune-library');
-const rune = require('../../rune-library');
+const wgr = require('../../webGLrune')
 
 function beside_frac(pic1, pic2, n){
     return quarter_turn_right(
@@ -40,7 +40,7 @@ module.exports = {
         }
 }
 
-console.log(rune.generateFlattenedShapeList(persian(heart_bb, 9)));
+console.log(wgr.show(persian(heart_bb, 9)));
 
 // Test
 // show(persian(nova_bb, 9));
