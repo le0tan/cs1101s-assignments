@@ -1,3 +1,6 @@
+require('../../rune-library');
+const wgr = require('../../webGLrune')
+
 function beside_frac(pic1, pic2, n){
     return quarter_turn_right(
         stack_frac(
@@ -31,5 +34,15 @@ function persian(rune, count) {
                       besiden(count,rune));
 }
 
+module.exports = {
+    f: function(a,b){
+            return persian(a,b);
+        }
+}
+
+console.log(wgr.show(persian(heart_bb, 9)));
+
 // Test
-show(persian(nova_bb, 9));
+// show(persian(nova_bb, 9));
+
+// console.log(__are_pictures_equal(nova_bb,heart_bb));

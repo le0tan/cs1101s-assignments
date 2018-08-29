@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <script src="graphics/gl-matrix.js"></script>
+    <script src="graphics/webGLcurve.js"></script>
+    <script src="graphics/webGLgraphics.js"></script>
+    <script src="graphics/webGLhi_graph_ce.js"></script>
+    <script src="graphics/webGLrune.js"></script>
+    <script src="visualizer/KineticJS.js"></script>
+    <script src="visualizer/visualizer.js"></script>
+    <script src="test_code.js"></script>
+</head>
+<body>
+    
+    <p>
+        You may change the content in "test_code.js" under "./" to generate different pictures and corresponding BASE64 hashes.
+    </p>
+
+    <a href="https://codebeautify.org/base64-to-image-converter" target="_blank">To convert BASE64 hash back to images</a>
+
+    <h2>Result:</h2>
+    <p class="comp">
+        Comparison
+    </p>
+
+    <h2>test_function():</h2>
+    <img class="firstpic" style='display:block; width:300px; height:300px;' id='base64image'/>
+    <h2>target_function():</h2>
+    <img class="secondpic" style='display:block; width:300px; height:300px;' id='base64image'/>
+
+    <script>
+        f();
+        function f(){
+            getReadyWebGL('2d','main-canvas',512,512,1);
+            getReadyWebGLForCanvas('2d');
+        }
+        test_function();
+        var division = document.createElement("div");
+        division.className = "leftHash";
+        var textbox = document.createElement("p");
+        division.appendChild(textbox);
+        textbox.innerHTML = canvas.toDataURL().replace('data:image/png;base64,','');
+        textbox.className = "leftBASE64";
+        textbox.style.wordWrap = "break-word";
+        textbox.style.width = "512px";
+        textbox.hidden = true;
+        document.body.appendChild(division);
+        var pic1 = document.querySelector('.firstpic');
+        pic1.src = canvas.toDataURL();
+
+        target_function();
+        var pic2 = document.querySelector('.secondpic');
+        pic2.src = canvas.toDataURL();
+        var division = document.createElement("div");
+        division.className = "rightHash";
+        var textbox = document.createElement("p");
+        division.appendChild(textbox);
+        textbox.innerHTML = canvas.toDataURL().replace('data:image/png;base64,','');
+        textbox.className = "rightBASE64";
+        textbox.style.wordWrap = "break-word";
+        textbox.style.width = "512px";
+        textbox.hidden = true;
+        document.body.appendChild(division);
+
+        if(document.querySelector('.leftBASE64').innerHTML === document.querySelector('.rightBASE64').innerHTML){
+            document.querySelector('.comp').innerHTML = "pass";
+        } else {
+            document.querySelector('.comp').innerHTML = "fail";
+        }
+    </script>
+
+
+
+</body>
+</html>
