@@ -1,5 +1,7 @@
 require('../../rune-library');
 
+const rune = require('../../rune-library');
+
 function persian(rune, count) {
     return stack_frac(
         1 - 1 / count,
@@ -35,6 +37,8 @@ module.exports = {
             return persian(a,b);
         }
 }
+
+console.log(rune.generateFlattenedShapeList(persian(heart_bb, 9)));
 
 // Test
 // show(persian(make_cross(rcross_bb), 5));

@@ -4515,7 +4515,8 @@ vertices = new Float32Array(vertices);
 indices = new Uint16Array(indices);
 
 /*-----------------------Drawing functions----------------------*/
-function generateFlattenedShapeList(shape) {
+module.exports = { 
+    generateFlattenedShapeList : function (shape) {
   var matStack = [];
   var matrix = mat4.create();
   var shape_list = {};
@@ -4604,6 +4605,7 @@ function generateFlattenedShapeList(shape) {
     }
   }
   return flattened_shape_list;
+}
 }
 
 var _ = require('lodash');
