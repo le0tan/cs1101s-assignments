@@ -1,10 +1,8 @@
 function three_quarters(pt) {
     const x = x_of(pt);
     const y = y_of(pt);
-    return t => (t <= 3 / 4)
-                ? make_point(math_cos(2 * math_PI * t) + x,
-                             math_sin(2 * math_PI * t) + y)
-                : make_point(x, y - 1);
+    return t => make_point(math_cos(2 * math_PI * 3/4 * t) + x,
+                           math_sin(2 * math_PI * 3/4 * t) + y);
 }
 
 // Test
