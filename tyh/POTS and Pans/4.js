@@ -41,25 +41,16 @@ function dial(list_of_digits) {
 
 function dial_all(list_of_numbers) {
     // your solution goes here
-    function dial_append(lst1, lst2){
+    function dial_append(sd1, sd2){
         return consecutively(list(
-                                lst1,
-                                dial(lst2),
+                                sd1,
+                                sd2,
                                 make_dtmf_tone(get_dtmf_frequencies(11)),
                                 silence(0.1)));
     }
-    
-    function left_accum(op, prev, lst){
-        return is_empty_list(lst)
-                ? prev
-                : left_accum(op, op(prev, head(lst)), tail(lst));
-    }
-    
-    const without_darth = filter(
-                            x => !equal(x, list(1,8,0,0,5,2,1,1,9,8,0)),
-                            list_of_numbers);
-                      
-    return left_accum(dial_append, silence(0), without_darth);
+    const pred = x => !equal(x, list(1,8,0,0,5,2,1,1,9,8,0));
+    const without_darth = filter(pred, list_of_numbers);
+    return accumulate(dial_append, silence(0), map(dial, without_darth));
 }
 
 // Test
