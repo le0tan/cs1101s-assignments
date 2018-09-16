@@ -19,14 +19,14 @@ list(
 /*
 list(
     list(
-        list([],'d',[]),
+        list([],'a',[]),
         'b',
-        list([],'e',[])
+        list([],'c',[])
         ),
-    'a',
+    'd',
     list(
-        list([],'f',[]),
-        'c',
+        list([],'e',[]),
+        'f',
         list([],'g',[])
         )
     );
@@ -53,14 +53,14 @@ const p1 = list(
                         
 const p2 = list(
     list(
-        list([],'d',[]),
+        list([],'a',[]),
         'b',
-        list([],'e',[])
+        list([],'c',[])
         ),
-    'a',
+    'd',
     list(
-        list([],'f',[]),
-        'c',
+        list([],'e',[]),
+        'f',
         list([],'g',[])
         )
     );
@@ -84,4 +84,4 @@ function find(bst, name) {
 
 // find(p1,"hello"); //This should print 14 '1's
 
-// find(p2, "g"); //This should print 5 '1's
+// find(p2, "z"); //This should print 6 '1's
