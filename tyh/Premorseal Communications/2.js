@@ -6,7 +6,13 @@ function noise(duration) {
 
 function cut_sourcesound(sourcesound, duration) {
     /* your answer here */
-    return make_sourcesound(get_wave(sourcesound), duration);
+    function cut_sourcesound(sourcesound, duration) {
+        /* your answer here */
+        return make_sourcesound(t => (t <= duration 
+                                        ? get_wave(sourcesound)(t) 
+                                        : 0)
+                                , duration);
+    }
 }
 
 // From Task 1

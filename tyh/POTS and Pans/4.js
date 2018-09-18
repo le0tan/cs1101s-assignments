@@ -44,8 +44,8 @@ function dial_all(list_of_numbers) {
     function dial_append(sd1, sd2){
         return consecutively(list(
                                 sd1,
-                                sd2,
                                 make_dtmf_tone(get_dtmf_frequencies(11)),
+                                sd2,
                                 silence(0.1)));
     }
     const pred = x => !equal(x, list(1,8,0,0,5,2,1,1,9,8,0));
