@@ -9,14 +9,12 @@ function quicksort(xs) {
         return xs;
     } else {
         const m = head(xs);
-        const p = partition(xs, m);
-        const lf = quicksort(tail(head(p)));
+        const p = partition(tail(xs), m);
+        const lf = quicksort(head(p));
         const rt = quicksort(tail(p));
         return append(lf, pair(m, rt));
     }
-}
-
-// Test
+}// Test
  const my_list = list(23, 12, 56, 92, -2, 0);
  quicksort(my_list);
 
