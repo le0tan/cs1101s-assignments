@@ -26,15 +26,27 @@ function graderVer2(arr) {
         // len_x is number of elements that have not been added to the new array
         // used_y is number of elements that have been added to the new array
         function helper(cnt, res, x, y, len_x, used_y) {
-            if(is_empty_list(x)) {
-                return pair(cnt, append(res, y));
+            if(is_empty_list(x) && is_empty_list(y)) {
+                return pair(cnt, res);
+            } else if(is_empty_list(x)) {
+                const yy = head(y);
+                const num_y = head(yy);
+                const lf_y = head(tail(yy));
+                const rt_y = tail(tail(yy));
+                return helper(cnt, append(res, list(tri(num_y,
+                                                        lf_y,
+                                                        rt_y))), 
+                                  x, tail(y), len_x, used_y + 1);
             } else if(is_empty_list(y)) {
-                return pair(cnt + accumulate((x, y) => head(tail(x)) * used_y,
-                                              0, x),
-                            append(res, map(x => tri(head(x),
-                                                     head(tail(x)),
-                                                     tail(tail(x)) + used_y),
-                                            x)));
+                const xx = head(x);
+                const num_x = head(xx);
+                const lf_x = head(tail(xx));
+                const rt_x = tail(tail(xx));
+                return helper(cnt + lf_x * used_y, 
+                                  append(res, list(tri(num_x, 
+                                                       lf_x,
+                                                       rt_x + used_y))), 
+                                  tail(x), y, len_x - 1, used_y);
             } else {
                 const xx = head(x);
                 const yy = head(y);
