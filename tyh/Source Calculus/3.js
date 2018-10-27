@@ -8,7 +8,11 @@ function make_flexible_step_stream(lst) {
             return pair(head(xs), () => h(tail(xs)));
         }
     }
-    return h(lst);
+    if(is_empty_list(lst)){
+        return [];
+    } else {
+        return h(lst);
+    }
 }
 
 function make_flexible_oscillating_stream(lst) {
