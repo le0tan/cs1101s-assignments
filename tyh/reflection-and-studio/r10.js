@@ -7,7 +7,7 @@ function list_to_inf_stream(xs){
         }
     }
     if(is_empty_list(xs)){
-        return pair([], () => inf(xs));
+        return [];
     } else {
         return helper(xs);
     }
