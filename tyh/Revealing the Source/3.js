@@ -166,7 +166,7 @@ function function_definition_body(stmt) {
 // function objects keep track of parameters, body
 // and environment, in an object tagged as "function_object"
 function make_function_object(parameters, body, env) {
-    func_obj_count = func_obj_count + 1;
+    func_obj_count = func_obj_count + 1;        //add one to count when an function object is made
     return {
         tag: "function_object",
         parameters: parameters,
