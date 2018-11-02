@@ -18,5 +18,5 @@ function make_oscillating_stream(n) {
       return h1(1);
   }
   
-  const osc_stream_123 = make_oscillating_stream(2);
+  const osc_stream_123 = make_oscillating_stream(3);
   eval_stream(osc_stream_123, 10);
