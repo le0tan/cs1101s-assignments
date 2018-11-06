@@ -733,7 +733,6 @@ const builtin_functions = list(
        pair("is_empty_list", is_empty_list   ),
        pair("display",       display         ),
        pair("error",         error           ),
-       pair("math_pow",      math_pow        ),
        pair("+",             (x,y) => x + y  ),
        pair("-",             (x,y) => x - y  ),
        pair("*",             (x,y) => x * y  ),
@@ -777,33 +776,51 @@ function setup_global_environment() {
 
 const the_global_environment = setup_global_environment();
 
-// setting up a library of higher-order functions
-// for testing more list functionality :-)
-
-const prelude =
-"function accumulate(op, initial, sequence) {           \
-    return is_empty_list(sequence)                      \
-        ? initial                                       \
-        : op(head(sequence),                            \
-             accumulate(op, initial, tail(sequence)));  \
-}                                                       \
-function map(f, xs) {                                   \
-    return (is_empty_list(xs))                          \
-        ? []                                            \
-        : pair(f(head(xs)), map(f, tail(xs)));          \
-}                                                       \
-function filter(pred, xs){                              \
-    return is_empty_list(xs)                            \
-        ? xs                                            \
-        : pred(head(xs))                                \
-            ? pair(head(xs),                            \
-                   filter(pred, tail(xs)))              \
-            : filter(pred, tail(xs));                   \
-}                                                       \
-";
-
 // parse_and_evaluate
 function parse_and_evaluate(str) {
-    return evaluate_toplevel(parse(prelude + str),
-                             the_global_environment);
+    return evaluate_toplevel(parse(str),
+			     the_global_environment);
 }
+
+/*
+examples:
+parse_and_evaluate("1;");
+parse_and_evaluate("1 + 1;");
+parse_and_evaluate("1 + 3 * 4;");
+parse_and_evaluate("(1 + 3) * 4;");
+parse_and_evaluate("1.4 / 2.3 + 70.4 * 18.3;");
+
+parse_and_evaluate("true;");
+parse_and_evaluate("true && false;");
+parse_and_evaluate("1 === 1 && true;");
+parse_and_evaluate("! (1 === 1);");
+parse_and_evaluate("if (! (1 === 1)) { 1; } else {2; }");
+
+parse_and_evaluate("list(1,2,3);");
+parse_and_evaluate("head(tail(list(1,2,3)));");
+parse_and_evaluate("'hello' + ' ' + 'world';");
+
+parse_and_evaluate("function length(xs) { if (is_empty_list(xs)) { return 0; } else { return 1 + length(tail(xs)); } } length(list(1,2,3,4,5));");
+
+parse_and_evaluate("function map(f, xs) { return is_empty_list(xs) ? [] : pair(f(head(xs)), map(f, tail(xs)));} map( x => x + 1, list(1,2,3));");
+
+*/
+
+/* THE READ-EVAL-PRINT LOOP */
+
+function read_eval_print_loop(history) {
+    const prog = prompt("History:" + history + 
+                        "\n\n" + "Enter next: ");
+    if (prog === "") {
+        error("session has ended");
+    } else {
+        const res = parse_and_evaluate(prog);
+        read_eval_print_loop(history + "\n" + 
+                             prog + " ===> " + res);
+    }
+}
+
+/*
+read_eval_print_loop("");
+*/
+

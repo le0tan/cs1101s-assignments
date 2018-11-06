@@ -8,8 +8,12 @@ function sum_array(arr){
     return res;
 }
 
-function acc_array(arr){
-    //idk what this means...
+function acc_arr(f, init, arr){
+    arr[0] = f(arr[0], init);
+    for(let i = 1; i < array_length(arr); i = i + 1){
+        arr[i] = f(arr[i], arr[i-1]);
+    }
+    return arr;
 }
 
 function star_py(n){

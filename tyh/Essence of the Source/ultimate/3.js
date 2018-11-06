@@ -827,7 +827,7 @@ function filter(pred, xs){                              \
 }                                                       \
 function append(a, b){\
 return is_empty_list(a) ? b : pair(head(a), append(tail(a),b));}\
-";
+";//added append function
 
 // parse_and_evaluate
 function parse_and_evaluate(str) {
