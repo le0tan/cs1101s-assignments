@@ -14,6 +14,7 @@ stmt    ::= if (expr) block else block
 block   ::= { stmt }
 expr    ::= expr binop expr
          |  unop expr
+         |  expr ? expr : expr
          |  name
          |  number | true | false
          |  expr(expr, expr, ...)
@@ -72,7 +73,6 @@ function evaluate_empty_list_expression(stmt) {
 function is_name(stmt) {
     return is_tagged_object(stmt, "name");
 }
-
 function name_of_name(stmt) {
     return stmt.name;
 }
@@ -84,11 +84,9 @@ function name_of_name(stmt) {
 function is_constant_declaration(stmt) {
     return is_tagged_object(stmt, "constant_declaration");
 }
-
 function constant_declaration_name(stmt) {
     return stmt.name;
 }
-
 function constant_declaration_value(stmt) {
     return stmt.value;
 }
@@ -111,11 +109,9 @@ function evaluate_constant_declaration(stmt, env) {
 function is_variable_declaration(stmt) {
     return is_tagged_object(stmt, "variable_declaration");
 }
-
 function variable_declaration_name(stmt) {
     return stmt.name;
 }
-
 function variable_declaration_value(stmt) {
     return stmt.value;
 }
@@ -136,23 +132,18 @@ function evaluate_variable_declaration(stmt, env) {
 function is_conditional_statement(stmt) {
     return is_tagged_object(stmt, "conditional_statement");
 }
-
 function conditional_statement_predicate(stmt) {
     return stmt.predicate;
 }
-
 function conditional_statement_consequent(stmt) {
     return stmt.consequent;
 }
-
 function conditional_statement_alternative(stmt) {
     return stmt.alternative;
 }
-
 function is_true(x) {
     return x === true;
 }
-
 function is_false(x) {
     return !is_true(x);
 }
@@ -169,6 +160,34 @@ function evaluate_conditional_statement(stmt, env) {
     }
 }
 
+/* CONDITIONAL EXPRESSIONS */
+
+// conditional expressions are tagged with "conditional_expression"
+function is_conditional_expression(stmt) {
+    return is_tagged_object(stmt, "conditional_expression");
+}
+function conditional_expression_predicate(stmt) {
+    return stmt.predicate;
+}
+function conditional_expression_consequent(stmt) {
+    return stmt.consequent;
+}
+function conditional_expression_alternative(stmt) {
+    return stmt.alternative;
+}
+
+// the meta-circular evaluation of conditional expressions
+// evaluates the predicate and then the appropriate
+// branch, depending on whether the predicate 
+// evaluates to true or not
+function evaluate_conditional_expression(stmt, env) {
+    if (is_true(evaluate(conditional_expression_predicate(stmt), env))) {
+        return evaluate(conditional_expression_consequent(stmt), env);
+    } else {
+        return evaluate(conditional_expression_alternative(stmt), env);
+    }
+}
+
 /* FUNCTION DEFINITION EXPRESSIONS */
 
 // function definitions are tagged with "function_definition"
@@ -176,11 +195,9 @@ function evaluate_conditional_statement(stmt, env) {
 function is_function_definition(stmt) {
     return is_tagged_object(stmt, "function_definition");
 }
-
 function function_definition_parameters(stmt) {
     return stmt.parameters;
 }
-
 function function_definition_body(stmt) {
     return stmt.body;
 }
@@ -195,19 +212,15 @@ function make_function_object(parameters, body, env) {
         environment: env
     };
 }
-
 function is_function_object(value) {
     return is_tagged_object(value, "function_object");
 }
-
 function function_object_parameters(function_object) {
     return function_object.parameters;
 }
-
 function function_object_body(function_object) {
     return function_object.body;
 }
-
 function function_object_environment(function_object) {
     return function_object.environment;
 }
@@ -241,8 +254,8 @@ function is_boolean_operation(stmt) {
 function evaluate_boolean_operation(stmt, env) {
     if (operator(stmt) === "&&") {
         if (is_true(evaluate(first_operand(
-                    operands(stmt)),
-                env))) {
+            operands(stmt)),
+            env))) {
             return evaluate(
                 first_operand(
                     rest_operands(operands(stmt))),
@@ -252,8 +265,8 @@ function evaluate_boolean_operation(stmt, env) {
         }
     } else {
         if (is_true(evaluate(first_operand(
-                    operands(stmt)),
-                env))) {
+            operands(stmt)),
+            env))) {
             return true;
         } else {
             return evaluate(
@@ -272,19 +285,15 @@ function evaluate_boolean_operation(stmt, env) {
 function is_sequence(stmt) {
     return is_list(stmt);
 }
-
 function is_empty_sequence(stmts) {
     return is_empty_list(stmts);
 }
-
 function is_last_statement(stmts) {
     return is_empty_list(tail(stmts));
 }
-
 function first_statement(stmts) {
     return head(stmts);
 }
-
 function rest_statements(stmts) {
     return tail(stmts);
 }
@@ -320,23 +329,18 @@ function evaluate_sequence(stmts, env) {
 function is_application(stmt) {
     return is_tagged_object(stmt, "application");
 }
-
 function operator(stmt) {
     return stmt.operator;
 }
-
 function operands(stmt) {
     return stmt.operands;
 }
-
 function no_operands(ops) {
     return is_empty_list(ops);
 }
-
 function first_operand(ops) {
     return head(ops);
 }
-
 function rest_operands(ops) {
     return tail(ops);
 }
@@ -346,11 +350,9 @@ function rest_operands(ops) {
 function is_builtin_function(fun) {
     return is_tagged_object(fun, "builtin");
 }
-
 function builtin_implementation(fun) {
     return fun.implementation;
 }
-
 function make_builtin_function(impl) {
     return {
         tag: "builtin",
@@ -404,7 +406,6 @@ function apply(fun, args) {
 function is_return_statement(stmt) {
     return is_tagged_object(stmt, "return_statement");
 }
-
 function return_statement_expression(stmt) {
     return stmt.expression;
 }
@@ -413,16 +414,11 @@ function return_statement_expression(stmt) {
 // body, we need to identify them during the evaluation
 // process
 function make_return_value(content) {
-    return {
-        tag: "return_value",
-        content: content
-    };
+    return { tag: "return_value", content: content };
 }
-
 function is_return_value(value) {
     return is_tagged_object(value, "return_value");
 }
-
 function return_value_content(value) {
     return value.content;
 }
@@ -439,16 +435,11 @@ function evaluate_return_statement(stmt, env) {
 function is_block(stmt) {
     return is_tagged_object(stmt, "block");
 }
-
 function block_body(stmt) {
     return stmt.body;
 }
-
 function make_block(stmt) {
-    return {
-        tag: "block",
-        body: stmt
-    };
+    return { tag: "block", body: stmt };
 }
 
 // the meta-circular evaluation of blocks simply
@@ -465,11 +456,9 @@ function evaluate_block(stmt, env) {
 function is_assignment(stmt) {
     return is_tagged_object(stmt, "assignment");
 }
-
 function assignment_name(stmt) {
     return stmt.name.name;
 }
-
 function assignment_right_hand_side(stmt) {
     return stmt.value;
 }
@@ -490,21 +479,14 @@ function evaluate_assignment(stmt, env) {
 function is_while_loop(stmt) {
     return is_tagged_object(stmt, "while_loop");
 }
-
 function while_loop_predicate(stmt) {
     return stmt.predicate;
 }
-
 function while_loop_statements(stmt) {
     return stmt.statements;
 }
-
 function make_while_loop(pred, stmt) {
-    return {
-        tag: "while_loop",
-        predicate: pred,
-        statements: stmt
-    };
+    return { tag: "while_loop", predicate: pred, statements: stmt };
 }
 
 // the meta-circular evaluation of while loops
@@ -528,19 +510,15 @@ function evaluate_while_loop(stmt, env) {
 function is_for_loop(stmt) {
     return is_tagged_object(stmt, "for_loop");
 }
-
 function for_loop_initialiser(stmt) {
     return stmt.initialiser;
 }
-
 function for_loop_predicate(stmt) {
     return stmt.predicate;
 }
-
 function for_loop_finaliser(stmt) {
     return stmt.finaliser;
 }
-
 function for_loop_statements(stmt) {
     return stmt.statements;
 }
@@ -571,7 +549,6 @@ ENVIRONMENTS
 // represents a binding of a name
 // (represented by a string) to a value.
 const an_empty_frame = {};
-
 function make_frame(names, values) {
     const frame = {};
     while (!is_empty_list(names) && !is_empty_list(values)) {
@@ -583,17 +560,13 @@ function make_frame(names, values) {
 }
 
 function make_denoted(val, mut) {
-    return {
-        mutable: mut,
-        value: val
-    };
+    return { mutable: mut, value: val };
 }
 
 function add_binding_to_frame(name, value, frame, mutable) {
     frame[name] = make_denoted(value, mutable); // object field assignment
     return undefined;
 }
-
 function has_binding_in_frame(name, frame) {
     return frame[name] !== undefined;
 }
@@ -622,7 +595,6 @@ function declare_variable(name, value, env) {
 function enclosing_environment(env) {
     return tail(env);
 }
-
 function enclose_by(frame, env) {
     return pair(frame, env);
 }
@@ -708,6 +680,8 @@ function evaluate(stmt, env) {
         return evaluate_variable_declaration(stmt, env);
     } else if (is_conditional_statement(stmt)) {
         return evaluate_conditional_statement(stmt, env);
+    } else if (is_conditional_expression(stmt)) {
+        return evaluate_conditional_expression(stmt, env);
     } else if (is_boolean_operation(stmt)) {
         return evaluate_boolean_operation(stmt, env);
     } else if (is_function_definition(stmt)) {
@@ -753,14 +727,6 @@ function make_empty_frame() {
 
 const the_empty_environment = [];
 
-//function add overload +
-function add(x, y) {
-    if (is_list(x) && is_list(y)) {
-        return append(x, y); //if both arguments are lists, append x and y
-    } else {
-        return x + y; // otherwise the normal + works
-    }
-}
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
@@ -771,7 +737,7 @@ const builtin_functions = list(
     pair("is_empty_list", is_empty_list),
     pair("display", display),
     pair("error", error),
-    pair("+", add), //overload + in function add
+    pair("+", (x, y) => x + y),
     pair("-", (x, y) => x - y),
     pair("*", (x, y) => x * y),
     pair("/", (x, y) => x / y),
@@ -802,12 +768,12 @@ function setup_global_environment() {
     const initial_env = enclose_by(make_empty_frame(),
         the_empty_environment);
     for_each(x => declare_constant(head(x),
-            make_builtin_function(tail(x)),
-            initial_env),
+        make_builtin_function(tail(x)),
+        initial_env),
         builtin_functions);
     for_each(x => declare_constant(head(x),
-            tail(x),
-            initial_env),
+        tail(x),
+        initial_env),
         builtin_values);
     return initial_env;
 }

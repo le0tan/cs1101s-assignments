@@ -753,14 +753,15 @@ function make_empty_frame() {
 
 const the_empty_environment = [];
 
-//function add overload +
-function add(x, y) {
+function add_updated(x, y) {
+    //new function for addition with support for lists
     if (is_list(x) && is_list(y)) {
-        return append(x, y); //if both arguments are lists, append x and y
+        return append(x, y);
     } else {
-        return x + y; // otherwise the normal + works
+        return x + y;
     }
 }
+
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
@@ -771,7 +772,7 @@ const builtin_functions = list(
     pair("is_empty_list", is_empty_list),
     pair("display", display),
     pair("error", error),
-    pair("+", add), //overload + in function add
+    pair("+", add_updated), //substitute the original + with new add function
     pair("-", (x, y) => x - y),
     pair("*", (x, y) => x * y),
     pair("/", (x, y) => x / y),
@@ -819,3 +820,11 @@ function parse_and_evaluate(str) {
     return evaluate_toplevel(parse(str),
         the_global_environment);
 }
+
+//test cases
+//list()+list();
+//list(1)+list(2);
+//list(1,2)+list();
+//list()+list(1,2);
+//1+2;
+//"a"+1;

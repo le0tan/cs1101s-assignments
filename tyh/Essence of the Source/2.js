@@ -212,7 +212,7 @@ function function_object_environment(function_object) {
     return function_object.environment;
 }
 
-// evluating a function definition expression
+// evaluating a function definition expression
 // results in a function object. Note that the
 // current environment is stored as the function
 // object's environment
@@ -753,14 +753,15 @@ function make_empty_frame() {
 
 const the_empty_environment = [];
 
-//function add overload +
-function add(x, y) {
-    if (is_list(x) && is_list(y)) {
-        return append(x, y); //if both arguments are lists, append x and y
+function new_op(x, y) {
+    // display(x.tag);
+    if ((is_function_object(x) || is_builtin_function(x)) && is_list(y)) {
+        return map(t => apply(x, list(t)), y);
     } else {
-        return x + y; // otherwise the normal + works
+        return x > y;
     }
 }
+
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
@@ -769,9 +770,10 @@ const builtin_functions = list(
     pair("tail", tail),
     pair("list", list),
     pair("is_empty_list", is_empty_list),
+    pair("math_abs", math_abs),
     pair("display", display),
     pair("error", error),
-    pair("+", add), //overload + in function add
+    pair("+", (x, y) => x + y),
     pair("-", (x, y) => x - y),
     pair("*", (x, y) => x * y),
     pair("/", (x, y) => x / y),
@@ -780,7 +782,7 @@ const builtin_functions = list(
     pair("!==", (x, y) => x !== y),
     pair("<", (x, y) => x < y),
     pair("<=", (x, y) => x <= y),
-    pair(">", (x, y) => x > y),
+    pair(">", new_op),
     pair(">=", (x, y) => x >= y),
     pair("!", x => !x)
 );
@@ -819,3 +821,6 @@ function parse_and_evaluate(str) {
     return evaluate_toplevel(parse(str),
         the_global_environment);
 }
+
+// parse_and_evaluate("function multiply_by_ten(x) {return x * 10;}multiply_by_ten > list(1, 2, 3);");
+// parse_and_evaluate("math_abs > list(1,-2,3);");

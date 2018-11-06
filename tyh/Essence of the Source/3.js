@@ -369,6 +369,23 @@ function apply_builtin_function(fun, argument_list) {
         argument_list);
 }
 
+//take and drop used to extract params needed
+function take(k, xs) {
+    if (k === 0) {
+        return [];
+    } else {
+        return pair(head(xs), take(k - 1, tail(xs)));
+    }
+}
+
+function drop(k, xs) {
+    if (k === 0) {
+        return xs;
+    } else {
+        return drop(k - 1, tail(xs));
+    }
+}
+
 // function application needs to distinguish between
 // builtin functions (which are evaluated using the
 // underlying JavaScript), and compound functions.
@@ -381,14 +398,31 @@ function apply(fun, args) {
     if (is_builtin_function(fun)) {
         return apply_builtin_function(fun, args);
     } else if (is_function_object(fun)) {
-        const result =
-            evaluate(function_object_body(fun),
-                extend_environment(
-                    function_object_parameters(fun),
-                    args,
-                    function_object_environment(fun)));
+        // prepare
+        let result = undefined;
+        const len_para = length(fun.parameters);
+        const len_args = length(args);
+        const body = function_object_body(fun);
+        const params = function_object_parameters(fun);
+        const env = function_object_environment(fun);
+        if (len_para <= len_args) {
+            // if arguments are sufficient, evaluate the function
+            // (note that if arguments are excessive, the error would be caught by extend_env)
+            result =
+                evaluate(body,
+                    extend_environment(
+                        params,
+                        args,
+                        env));
+        } else {
+            // define a new function with a new environment
+            const new_env = extend_environment(take(len_args, params), args, env);
+            result = make_function_object(drop(len_args, params), body, new_env);
+        }
         if (is_return_value(result)) {
             return return_value_content(result);
+        } else if (is_function_object(result)) {
+            return result;
         } else {
             return undefined;
         }
@@ -753,17 +787,10 @@ function make_empty_frame() {
 
 const the_empty_environment = [];
 
-//function add overload +
-function add(x, y) {
-    if (is_list(x) && is_list(y)) {
-        return append(x, y); //if both arguments are lists, append x and y
-    } else {
-        return x + y; // otherwise the normal + works
-    }
-}
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
+    pair("math_pow", math_pow),
     pair("pair", pair),
     pair("head", head),
     pair("tail", tail),
@@ -771,7 +798,7 @@ const builtin_functions = list(
     pair("is_empty_list", is_empty_list),
     pair("display", display),
     pair("error", error),
-    pair("+", add), //overload + in function add
+    pair("+", (x, y) => x + y),
     pair("-", (x, y) => x - y),
     pair("*", (x, y) => x * y),
     pair("/", (x, y) => x / y),
@@ -819,3 +846,14 @@ function parse_and_evaluate(str) {
     return evaluate_toplevel(parse(str),
         the_global_environment);
 }
+
+/***
+function g(a1, a2, a3, a4, a5, a6) {return a1 + a2 + a3 + a4 + a5 + a6;}const g1 = g(1, 2);const g2 = g1(3, 4, 5);g2(6); // returns 21
+function list_call(f,args){if(is_empty_list(args){return f();}else{return list_call(f(head(args),tail(args)));}}function f(a1, a2, a3, a4) {return a1 + a2 + a3 + a4;}list_call(f, list(1, 2, 3, 4)); // returns 10
+function f(x, y) {return x * y;}const f1 = f();f1(3, 4); // returns 12
+***/
+
+// parse_and_evaluate("function list_call(f,args){if(is_empty_list(args)){return f;}else{return list_call(f(head(args)), tail(args));}}function f(a1, a2, a3, a4) {return a1 + a2 + a3 + a4;}list_call(f, list(1, 2, 3, 4));");
+// parse_and_evaluate("function g(a1, a2, a3, a4, a5, a6) {return a1 + a2 + a3 + a4 + a5 + a6;}const g1 = g(1, 2);const g2 = g1(3, 4, 5);g2(6); // returns 21");
+// parse_and_evaluate("function f(x, y) {return x * y;}const f1 = f();f1(3, 4); // returns 12");
+parse_and_evaluate("function f(x, y) {return math_pow(x, y);}const f1 = f(5);f1(3); // returns 125");

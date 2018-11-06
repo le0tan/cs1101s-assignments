@@ -14,6 +14,7 @@ stmt    ::= if (expr) block else block
 block   ::= { stmt }
 expr    ::= expr binop expr
          |  unop expr
+         |  expr ? expr : expr
          |  name
          |  number | true | false
          |  expr(expr, expr, ...)
@@ -29,7 +30,6 @@ CONSTANTS: NUMBERS, STRINGS, TRUE, FALSE
 // constants (numbers, strings, booleans)
 // are considered "self_evaluating". This means, they
 // represent themselves in the syntax tree
-
 function is_self_evaluating(stmt) {
     return is_number(stmt) ||
         is_string(stmt) ||
@@ -93,14 +93,34 @@ function constant_declaration_value(stmt) {
     return stmt.value;
 }
 
+// make delayed object to implement lazy evaluation
+function make_delayed_object(stmt_value, env){
+    return {tag: "delayed", value: stmt_value, environment: env};
+}
+
+function is_delayed_object(obj){
+    return is_tagged_object(obj, "delayed");
+}
+
+function evaluate_delayed_object(obj){
+    return evaluate(obj.value, obj.environment);
+}
+
 // evaluation of a constant declaration evaluates
 // the right-hand expression and binds the
 // name to the resulting value in the
 // first (innermost) frame
 function evaluate_constant_declaration(stmt, env) {
-    declare_constant(constant_declaration_name(stmt),
+    if(!is_self_evaluating(stmt.value)){
+        // lookup_name_value('f', env);
+        declare_constant(constant_declaration_name(stmt),
+        make_delayed_object(stmt.value, env),
+        env);
+    } else {
+        declare_constant(constant_declaration_name(stmt),
         evaluate(constant_declaration_value(stmt), env),
         env);
+    }
     return undefined;
 }
 
@@ -124,9 +144,15 @@ function variable_declaration_value(stmt) {
 // name to the resulting value in the
 // first (innermost) frame
 function evaluate_variable_declaration(stmt, env) {
-    declare_variable(variable_declaration_name(stmt),
-        evaluate(variable_declaration_value(stmt), env),
+    if(!is_self_evaluating(stmt.value)){
+        declare_variable(variable_declaration_name(stmt),
+        make_delayed_object(stmt.value, env),
         env);
+    } else {
+        declare_variable(variable_declaration_name(stmt),
+            evaluate(variable_declaration_value(stmt), env),
+            env);
+    }
     return undefined;
 }
 
@@ -166,6 +192,37 @@ function evaluate_conditional_statement(stmt, env) {
         return evaluate(conditional_statement_consequent(stmt), env);
     } else {
         return evaluate(conditional_statement_alternative(stmt), env);
+    }
+}
+
+/* CONDITIONAL EXPRESSIONS */
+
+// conditional expressions are tagged with "conditional_expression"
+function is_conditional_expression(stmt) {
+    return is_tagged_object(stmt, "conditional_expression");
+}
+
+function conditional_expression_predicate(stmt) {
+    return stmt.predicate;
+}
+
+function conditional_expression_consequent(stmt) {
+    return stmt.consequent;
+}
+
+function conditional_expression_alternative(stmt) {
+    return stmt.alternative;
+}
+
+// the meta-circular evaluation of conditional expressions
+// evaluates the predicate and then the appropriate
+// branch, depending on whether the predicate 
+// evaluates to true or not
+function evaluate_conditional_expression(stmt, env) {
+    if (is_true(evaluate(conditional_expression_predicate(stmt), env))) {
+        return evaluate(conditional_expression_consequent(stmt), env);
+    } else {
+        return evaluate(conditional_expression_alternative(stmt), env);
     }
 }
 
@@ -639,7 +696,13 @@ function lookup_name_value(name, env) {
         if (is_empty_environment(env)) {
             error("Unbound name: " + name);
         } else if (has_binding_in_frame(name, first_frame(env))) {
-            return first_frame(env)[name].value;
+            const cur = first_frame(env)[name].value;
+            // handle delayed objects
+            if(is_delayed_object(cur)){
+                return evaluate_delayed_object(cur);
+            } else {
+                return cur;
+            }
         } else {
             return env_loop(enclosing_environment(env));
         }
@@ -708,6 +771,8 @@ function evaluate(stmt, env) {
         return evaluate_variable_declaration(stmt, env);
     } else if (is_conditional_statement(stmt)) {
         return evaluate_conditional_statement(stmt, env);
+    } else if (is_conditional_expression(stmt)) {
+        return evaluate_conditional_expression(stmt, env);
     } else if (is_boolean_operation(stmt)) {
         return evaluate_boolean_operation(stmt, env);
     } else if (is_function_definition(stmt)) {
@@ -753,14 +818,6 @@ function make_empty_frame() {
 
 const the_empty_environment = [];
 
-//function add overload +
-function add(x, y) {
-    if (is_list(x) && is_list(y)) {
-        return append(x, y); //if both arguments are lists, append x and y
-    } else {
-        return x + y; // otherwise the normal + works
-    }
-}
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
@@ -771,7 +828,7 @@ const builtin_functions = list(
     pair("is_empty_list", is_empty_list),
     pair("display", display),
     pair("error", error),
-    pair("+", add), //overload + in function add
+    pair("+", (x, y) => x + y),
     pair("-", (x, y) => x - y),
     pair("*", (x, y) => x * y),
     pair("/", (x, y) => x / y),
@@ -819,3 +876,10 @@ function parse_and_evaluate(str) {
     return evaluate_toplevel(parse(str),
         the_global_environment);
 }
+
+// parse_and_evaluate('const a = 1;');
+// parse_and_evaluate("const f = t => t; const b = f(2); b;");
+parse_and_evaluate("let x = 2;\
+let y = x * x;\
+x = 3;\
+y;");
