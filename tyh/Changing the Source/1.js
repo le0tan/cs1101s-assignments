@@ -145,6 +145,7 @@ function variable_declaration_value(stmt) {
 // first (innermost) frame
 function evaluate_variable_declaration(stmt, env) {
     if(!is_self_evaluating(stmt.value)){
+        // if rvalue is not self-eval, we should delay its operation
         declare_variable(variable_declaration_name(stmt),
         make_delayed_object(stmt.value, env),
         env);
@@ -421,6 +422,8 @@ function make_builtin_function(impl) {
 // to make use of JavaScript's builtin functions
 // in order to access operators such as addition
 function apply_builtin_function(fun, argument_list) {
+    // in case the argument is delayed, we should evaluate the values of them before executing its underlying js
+    argument_list = map(x=>(is_delayed_object(x)?evaluate_delayed_object(x):x), argument_list);
     return apply_in_underlying_javascript(
         builtin_implementation(fun),
         argument_list);
@@ -748,8 +751,14 @@ function list_of_values(exps, env) {
     if (no_operands(exps)) {
         return [];
     } else {
-        return pair(evaluate(first_operand(exps), env),
-            list_of_values(rest_operands(exps), env));
+        if(is_self_evaluating(first_operand(exps))){
+            return pair(evaluate(first_operand(exps), env),
+                list_of_values(rest_operands(exps), env));
+        } else {
+            // delay the evaluation of function arguments
+            const t = make_delayed_object(first_operand(exps), env);
+            return pair(t, list_of_values(rest_operands(exps), env));
+        }
     }
 }
 
@@ -879,7 +888,28 @@ function parse_and_evaluate(str) {
 
 // parse_and_evaluate('const a = 1;');
 // parse_and_evaluate("const f = t => t; const b = f(2); b;");
-parse_and_evaluate("let x = 2;\
-let y = x * x;\
-x = 3;\
-y;");
+// parse_and_evaluate("let x = 2;\
+// let y = x * x;\
+// x = 3;\
+// y;");
+// parse_and_evaluate("let x = 2;\
+// let y = 5;\
+// let z = 10;\
+// let temp1 = x * y;\
+// let temp2 = temp1 + z;\
+// display(temp1);\
+// display(temp2);\
+// x = 3;\
+// y = 6;\
+// z = 9;\
+// display(temp1);\
+// display(temp2);");
+// parse_and_evaluate("let x = 2;\
+// function f(y) {\
+//     x = 3;\
+//     display(y);\
+//     return y;\
+// }\
+// let z = f(x);\
+// x = 4;\
+// display(z);");

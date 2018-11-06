@@ -38,8 +38,17 @@ function make_arr(f, row, col){
     return res;
 }
 
-function flip_arr(arr){
-    //idk what this means...
+function flip(arr){
+    const res = [];
+    const rows = array_length(arr);
+    const cols = rows === 0 ? 0 : array_length(arr[0]);
+    for(let i = 0; i < rows; i = i + 1){
+        res[i] = [];
+        for(let j = 0; j < cols; j = j + 1){
+            res[i][j] = arr[rows-i-1][cols-j-1];
+        }
+    }
+    return res;
 }
 
 //1.2
@@ -237,6 +246,211 @@ function e(a,b){
 }
 function ee(a,b){
     function h(res){
-        
+        //todo
+    }
+}
+
+//q3
+function f(lst){
+    function make_list(x, n, res){
+        if(n === 0){
+            return res;
+        } else {
+            return make_list(x, n-1, pair(x, res));
+        }
+    }
+    if(is_empty_list(lst)){
+        return [];
+    } else if(is_list(lst)){
+        return pair(f(head(lst)), f(tail(lst)));
+    } else {
+        return make_list(lst, lst, []);
+    }
+}
+
+//2.2
+//q1
+function tail_n_times(xs, n){
+    function h(cnt, res){
+        if(cnt >= n){
+            return res;
+        } else {
+            return h(cnt+1, tail(res));
+        }
+    }
+    return h(0, xs);
+}
+function last_n(xs, n){
+    const len = length(xs);
+    return tail_n_times(xs, len-n);
+}
+
+//q2
+function two_d_map(f, xs){
+    if(is_empty_list(xs)){
+        return [];
+    } else {
+        return pair(map(f, head(xs)), two_d_map(f, tail(xs)));
+    }
+}
+
+two_d_map(t=>t*2, list(list(1,2,3),
+                          list(4,5,6),
+                          list(7,8,9))
+);
+
+//q3
+function snake(xs){
+    if(is_empty_list(xs)){
+        return [];
+    } else {
+        return append(head(xs), snake(tail(xs)));
+    }
+}
+
+snake(list(list(1,2,3), list(4,5,6), list(7,8,9)));
+
+//q4
+function num_of_matches(a, b){
+    function in_list(n, xs){
+        if(is_empty_list(xs)){
+            return false;
+        } else {
+            if(head(xs) === n){
+                return true;
+            } else {
+                return in_list(n, tail(xs));
+            }
+        }
+    }
+    if(is_empty_list(a)){
+        return 0;
+    } else {
+        if(in_list(head(a), b)){
+            return 1 + num_of_matches(tail(a), b);
+        } else {
+            return num_of_matches(tail(a), b);
+        }
+    }
+}
+
+num_of_matches(list(1,2,3,4),list(1,2,3));
+
+//q5
+function all_pairings(n){
+    //to-do
+}
+
+//2.3
+//q1
+function tail_n_times(xs, n){
+    function h(cnt, res){
+        if(cnt >= n){
+            return res;
+        } else {
+            return h(cnt+1, tail(res));
+        }
+    }
+    return h(0, xs);
+}
+function is_prefix_of(xs, ys){
+    if(is_empty_list(xs)){
+        return true;
+    } else {
+        if(is_empty_list(ys)){
+            return false;
+        } else {
+            if(head(xs) === head(ys)){
+                return is_prefix_of(tail(xs), tail(ys));
+            } else {
+                return false;
+            }
+        }
+    }
+}
+function sublist_replace(a, b, c){
+    // replace all a with b in c
+    const lenA = length(a);
+    const lenB = length(b);
+    let res = [];
+    function h(xs){
+        if(is_empty_list(xs)){
+            return undefined;
+        } else if(is_prefix_of(a, xs)){
+            res = append(res, b);
+            h(tail_n_times(xs, lenA));
+        } else {
+            res = append(res, list(head(xs)));
+            h(tail(xs));
+        }
+    }
+    h(c);
+    return res;
+}
+
+//q2
+function solvable(xs, n){
+    const len = length(xs);
+    function h(cur, rem){
+        if(cur === len-1){
+            return true;
+        } else if(rem <= 0){
+            return false;
+        } else {
+            const now = list_ref(xs, cur);
+            if(!(cur + now < len||cur - now >= 0)){
+                return false;
+            } else if(cur + now < len){
+                // can walk right
+                return h(cur + now, rem-1);
+            } else if(cur - now >= 0){
+                // can walk left
+                return h(cur - now, rem-1);
+            } else { }
+        }
+    }
+    return h(0, n);
+}
+// solvable(list(6,1,3,5,2,2,4,3),3);
+// solvable(list(3,5,8,4,2,7,1,6),3);
+
+//q3.1
+function reorder(xs){
+    function ref_head(xs, n){
+        if(n === 0){
+            return xs;
+        } else {
+            return ref_head(tail(xs), n-1);
+        }
+    }
+    const is_even = t => (t % 2 === 0);
+    let pos = 0;
+    let cur_val = list_ref(xs, pos);
+    const len = length(xs);
+    for(let i = 0; i < len; i = i + 1){
+        if(is_even(pos)){
+            // this number should go to pos/2 - 1
+            const tar_index = pos/2 + len;
+            const tar_val = list_ref(xs, tar_index);
+            set_head(ref_head(xs, tar_index), cur_val);
+            cur_val = tar_val;
+            pos = tar_index;
+        } else {
+            // this number should go to (pos-1+len)/2
+            const tar_index = (pos-1)/2;
+            const tar_val = list_ref(xs, tar_index);
+            set_head(ref_head(xs, tar_index), cur_val);
+            cur_val = tar_val;
+            pos = tar_index;
+        }
+    }
+    return xs;
+}
+//q3.2
+function rotate(lst, k){
+    if(k === 0){
+        return lst;
+    } else {
+        return rotate(append(tail(lst), list(head(lst))), k-1);
     }
 }
