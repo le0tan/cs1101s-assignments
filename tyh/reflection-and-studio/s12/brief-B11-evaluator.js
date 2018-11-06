@@ -459,33 +459,14 @@ function assignment_right_hand_side(stmt) {
    return stmt.value;
 }
 
-// modified from look_up_name_value
-function lookup_name(name, env) {
-    function env_loop(env) {
-       if (is_empty_environment(env)) {
-          error("Unbound name: " + name);
-       } else if (has_binding_in_frame(name, first_frame(env))) {
-          return first_frame(env)[name];
-       } else {
-           return env_loop(enclosing_environment(env));
-       }
-    }
-    return env_loop(env);
- }
-
 // the meta-circular evaluation of assignment evaluates
 // the right-hand side of the assignment and assigns the
 // left-hand side name to the resulting value in the
 // environment 
 function evaluate_assignment(stmt, env) {
-    if(lookup_name(stmt.name.name, env).mutable){
-        const value = evaluate(assignment_right_hand_side(stmt), env);
-        assign_name_to_value(assignment_name(stmt), value, env);
-        return value;
-    } else {
-        const line = stmt.line;
-        error("Line "+line+": "+"Assignment to immutable data is not allowed.");
-    }
+    const value = evaluate(assignment_right_hand_side(stmt), env);
+    assign_name_to_value(assignment_name(stmt), value, env);
+    return value;
 }
 
 /* WHILE LOOPS */
@@ -843,4 +824,3 @@ function read_eval_print_loop(history) {
 read_eval_print_loop("");
 */
 
-parse_and_evaluate("const a = 1; a = 2;");
