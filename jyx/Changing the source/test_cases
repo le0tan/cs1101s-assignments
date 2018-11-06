@@ -1,0 +1,22 @@
+parse_and_evaluate("let x = 2;\
+function f(y) {\
+    x = 3;\
+    display(y); \
+    return y;\
+}\
+let z = f(x);\
+x = 4;\
+display(z);");
+
+parse_and_evaluate("let x = 2; let y=x + 1; x=3; y;"); 
+parse_and_evaluate("let x = 2;let y = x * x;x = 3;y;");
+parse_and_evaluate("let x = 2;let y = 5;let z = 10;\
+let temp1 = x * y;\
+let temp2 = temp1 + z;\
+display(temp1); \
+display(temp2); \
+x = 3;\
+y = 6;\
+z = 9;\
+display(temp1); \
+display(temp2);");
