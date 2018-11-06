@@ -201,3 +201,38 @@ function f(arr){
 f([1,-1,3,-5,3,9,-6,2,0,3,8,-7]);
 
 //2.1
+//q1
+function f(g,n,a){
+    if(n === 0){
+        return a;
+    } else {
+        return a+accumulate((x,y)=>x+y, 0, map(t=>g(t), f(g,n-1,a)));
+    }
+}
+function ff(g,n,a){
+    function h(x, ans, last){
+        if(x > n){
+            return ans;
+        } else {
+            const cur = g(last);
+            return h(x+1, ans+cur, cur);
+        }
+    }
+    return h(0, 0, a);
+}
+
+//q2
+function e(a,b){
+    if(is_empty_list(a) || is_empty_list(b)){
+        return is_empty_list(a) && is_empty_list(b);
+    } else if((!is_pair(a))&&(!is_pair(b))){
+        return a === b;
+    } else {
+        return e(head(a), head(b)) && e(tail(a), tail(b));
+    }
+}
+function ee(a,b){
+    function h(res){
+        
+    }
+}
