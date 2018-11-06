@@ -367,23 +367,6 @@ function apply_builtin_function(fun,argument_list) {
                 argument_list);     
 }
     
-//take and drop used to extract params needed
-function take(k, xs) {
-    if (k === 0) {
-        return [];
-    } else {
-        return pair(head(xs), take(k - 1, tail(xs)));
-    }
-}
-
-function drop(k, xs) {
-    if (k === 0) {
-        return xs;
-    } else {
-        return drop(k - 1, tail(xs));
-    }
-}
-
 // function application needs to distinguish between
 // builtin functions (which are evaluated using the
 // underlying JavaScript), and compound functions.
@@ -396,25 +379,17 @@ function apply(fun, args) {
    if (is_builtin_function(fun)) {
       return apply_builtin_function(fun, args);
    } else if (is_function_object(fun)) {
-       const params = function_object_parameters(fun);
-       if(length(params) <= length(args)){
-            const result =
-                     evaluate(function_object_body(fun),
-                              extend_environment(
-                                  function_object_parameters(fun),
-                                  args,
-                                  function_object_environment(fun)));
-            if (is_return_value(result)) {
-             return return_value_content(result);
-          } else {
-              return undefined;
-          }
-       } else {
-           const p1 = take(length(args), params);
-           const p2 = drop(length(args), params);
-           const new_env = extend_environment(p1, args, function_object_environment(fun));
-           return make_function_object(p2, function_object_body(fun), new_env);
-       }
+      const result =
+         evaluate(function_object_body(fun),
+                  extend_environment(
+                      function_object_parameters(fun),
+                      args,
+                      function_object_environment(fun)));
+      if (is_return_value(result)) {
+         return return_value_content(result);
+      } else {
+          return undefined;
+      }
    } else {
        error("Unknown function type in apply: " + fun);
    }
@@ -751,12 +726,12 @@ const the_empty_environment = [];
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
-       pair("math_pow", math_pow),
        pair("pair",          pair            ),
        pair("head",          head            ),
        pair("tail",          tail            ),
        pair("list",          list            ),
        pair("is_empty_list", is_empty_list   ),
+       pair("math_abs",      math_abs        ),
        pair("display",       display         ),
        pair("error",         error           ),
        pair("+",             (x,y) => x + y  ),
@@ -802,42 +777,8 @@ function setup_global_environment() {
 
 const the_global_environment = setup_global_environment();
 
-// setting up a library of higher-order functions
-// for testing more list functionality :-)
-
-const prelude =
-"function accumulate(op, initial, sequence) {           \
-    return is_empty_list(sequence)                      \
-        ? initial                                       \
-        : op(head(sequence),                            \
-             accumulate(op, initial, tail(sequence)));  \
-}                                                       \
-function map(f, xs) {                                   \
-    return (is_empty_list(xs))                          \
-        ? []                                            \
-        : pair(f(head(xs)), map(f, tail(xs)));          \
-}                                                       \
-function filter(pred, xs){                              \
-    return is_empty_list(xs)                            \
-        ? xs                                            \
-        : pred(head(xs))                                \
-            ? pair(head(xs),                            \
-                   filter(pred, tail(xs)))              \
-            : filter(pred, tail(xs));                   \
-}                                                       \
-function append(a, b){\
-return is_empty_list(a) ? b : pair(head(a), append(tail(a),b));}\
-";
-
 // parse_and_evaluate
 function parse_and_evaluate(str) {
-    return evaluate_toplevel(parse(prelude + str),
-                             the_global_environment);
+    return evaluate_toplevel(parse(str),
+			     the_global_environment);
 }
-// parse_and_evaluate("function list_call(f,args){if(is_empty_list(args)){return f;}else{return list_call(f(head(args)), tail(args));}}function f(a1, a2, a3, a4) {return a1 + a2 + a3 + a4;}list_call(f, list(1, 2, 3, 4));");
-// parse_and_evaluate("function g(a1, a2, a3, a4, a5, a6) {return a1 + a2 + a3 + a4 + a5 + a6;}const g1 = g(1, 2);const g2 = g1(3, 4, 5);g2(6); // returns 21");
-// parse_and_evaluate("function f(x, y) {return x * y;}const f1 = f();f1(3, 4); // returns 12");
-// parse_and_evaluate("function f(x, y) {return math_pow(x, y);}const f1 = f(5);f1(3); // returns 125");
-// parse_and_evaluate("const even_filter = filter(x => x % 2 === 0);even_filter(list(1, 2, 3, 4));  // returns list(2, 4)");
-// parse_and_evaluate("const list_flattener = accumulate(append, []); list_flattener(list(list(1, 2), list(3), list(4, 5)));  // returns list(1, 2, 3, 4, 5)");
-// parse_and_evaluate("const list_squarer = map(x => x * x);list_squarer(list(1, 2, 3));  // returns list(1, 4, 9)");

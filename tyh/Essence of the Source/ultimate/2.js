@@ -723,6 +723,15 @@ function make_empty_frame() {
 
 const the_empty_environment = [];
 
+function new_op(x, y) {
+    // display(x.tag);
+    if ((is_function_object(x) || is_builtin_function(x)) && is_list(y)) {
+        return map(t => apply(x, list(t)), y);
+    } else {
+        return x > y;
+    }
+}
+
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
@@ -743,7 +752,7 @@ const builtin_functions = list(
        pair("!==",           (x,y) => x !== y),
        pair("<",             (x,y) => x <   y),
        pair("<=",            (x,y) => x <=  y),
-       pair(">",             (x,y) => x >   y),
+       pair(">",             new_op),
        pair(">=",            (x,y) => x >=  y),
        pair("!",              x    =>   !   x)
        );
@@ -782,3 +791,8 @@ function parse_and_evaluate(str) {
     return evaluate_toplevel(parse(str),
 			     the_global_environment);
 }
+
+// parse_and_evaluate("");
+// parse_and_evaluate("function multiply_by_ten(x) {return x * 10;}multiply_by_ten > list(1, 2, 3); // returns list(10, 20, 30);");
+// parse_and_evaluate("math_abs > list(5, -10, 15, 20, -25); // returns list(5, 10, 15, 20, 25);");
+// parse_and_evaluate("(x => x * x) > list(1, 2, 3); // returns list(1, 4, 9);");

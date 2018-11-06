@@ -733,7 +733,7 @@ function is_unary_function(func){
 
 function plus(x, y){
     if(is_unary_function(x) && is_unary_function(y)){
-        const new_env = extend_environment(list('x','y'), list(x,y), the_global_environment);
+        const new_env = extend_environment(list('x','y'), list(x,y), []);
         return evaluate(parse('t => x(y(t));'), new_env);
     } else {
         return x + y;

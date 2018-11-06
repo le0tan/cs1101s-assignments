@@ -459,11 +459,18 @@ function assignment_right_hand_side(stmt) {
    return stmt.value;
 }
 
+let modified_outside = false;
+
 // the meta-circular evaluation of assignment evaluates
 // the right-hand side of the assignment and assigns the
 // left-hand side name to the resulting value in the
 // environment 
 function evaluate_assignment(stmt, env) {
+    const cur_name = stmt.name.name;
+    // display(cur_name);
+    if(!has_binding_in_frame("a", first_frame(env))){
+        modified_outside = true;
+    } else {  }
     const value = evaluate(assignment_right_hand_side(stmt), env);
     assign_name_to_value(assignment_name(stmt), value, env);
     return value;
@@ -723,15 +730,6 @@ function make_empty_frame() {
 
 const the_empty_environment = [];
 
-function new_op(x, y) {
-    // display(x.tag);
-    if ((is_function_object(x) || is_builtin_function(x)) && is_list(y)) {
-        return map(t => apply(x, list(t)), y);
-    } else {
-        return x > y;
-    }
-}
-
 // the global environment has bindings for all
 // builtin functions, including the operators
 const builtin_functions = list(
@@ -740,7 +738,6 @@ const builtin_functions = list(
        pair("tail",          tail            ),
        pair("list",          list            ),
        pair("is_empty_list", is_empty_list   ),
-       pair("math_abs",      math_abs        ),
        pair("display",       display         ),
        pair("error",         error           ),
        pair("+",             (x,y) => x + y  ),
@@ -752,7 +749,7 @@ const builtin_functions = list(
        pair("!==",           (x,y) => x !== y),
        pair("<",             (x,y) => x <   y),
        pair("<=",            (x,y) => x <=  y),
-       pair(">",             new_op),
+       pair(">",             (x,y) => x >   y),
        pair(">=",            (x,y) => x >=  y),
        pair("!",              x    =>   !   x)
        );
@@ -792,7 +789,52 @@ function parse_and_evaluate(str) {
 			     the_global_environment);
 }
 
-// parse_and_evaluate("");
-// parse_and_evaluate("function multiply_by_ten(x) {return x * 10;}multiply_by_ten > list(1, 2, 3); // returns list(10, 20, 30);");
-// parse_and_evaluate("math_abs > list(5, -10, 15, 20, -25); // returns list(5, 10, 15, 20, 25);");
-// parse_and_evaluate("(x => x * x) > list(1, 2, 3); // returns list(1, 4, 9);");
+/*
+examples:
+parse_and_evaluate("1;");
+parse_and_evaluate("1 + 1;");
+parse_and_evaluate("1 + 3 * 4;");
+parse_and_evaluate("(1 + 3) * 4;");
+parse_and_evaluate("1.4 / 2.3 + 70.4 * 18.3;");
+
+parse_and_evaluate("true;");
+parse_and_evaluate("true && false;");
+parse_and_evaluate("1 === 1 && true;");
+parse_and_evaluate("! (1 === 1);");
+parse_and_evaluate("if (! (1 === 1)) { 1; } else {2; }");
+
+parse_and_evaluate("list(1,2,3);");
+parse_and_evaluate("head(tail(list(1,2,3)));");
+parse_and_evaluate("'hello' + ' ' + 'world';");
+
+parse_and_evaluate("function length(xs) { if (is_empty_list(xs)) { return 0; } else { return 1 + length(tail(xs)); } } length(list(1,2,3,4,5));");
+
+parse_and_evaluate("function map(f, xs) { return is_empty_list(xs) ? [] : pair(f(head(xs)), map(f, tail(xs)));} map( x => x + 1, list(1,2,3));");
+
+*/
+
+/* THE READ-EVAL-PRINT LOOP */
+
+function read_eval_print_loop(history) {
+    const prog = prompt("History:" + history + 
+                        "\n\n" + "Enter next: ");
+    if (prog === "") {
+        error("session has ended");
+    } else {
+        const res = parse_and_evaluate(prog);
+        read_eval_print_loop(history + "\n" + 
+                             prog + " ===> " + res);
+    }
+}
+
+/*
+read_eval_print_loop("");
+*/
+
+// parse_and_evaluate('const a = 1; a = 2;');
+function modifies_outside_variables(str){
+    parse_and_evaluate(str);
+    const ans = modified_outside;
+    modified_outside = false;
+    return ans;
+}
