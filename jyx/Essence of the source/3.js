@@ -842,3 +842,4 @@ function parse_and_evaluate(str) {
     return evaluate_toplevel(parse(str),
         the_global_environment);
 }
+

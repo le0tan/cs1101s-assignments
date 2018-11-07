@@ -76,8 +76,17 @@ parse_and_evaluate("\
     y=x;");
 //21 20 10
 parse_and_evaluate("\
-    x=list(1,2,3);\
-    y=pair(10,x);\
+    let x=list(1,2,3);\
+    let y=pair(10,x);\
     x=list(2,3);\
     y;");
 //[10, [2, [3, []]]]
+parse_and_evaluate("let x = 10; let y =20; y=x; x=100;display(y);");
+parse_and_evaluate("\
+    let x =10;\
+    function f(){\
+        return x;\
+    }\
+    let p=f();\
+    x=20;\
+    display(p);");
