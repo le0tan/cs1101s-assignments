@@ -792,7 +792,8 @@ function parse_and_evaluate(str) {
 			     the_global_environment);
 }
 
-// parse_and_evaluate("");
-// parse_and_evaluate("function multiply_by_ten(x) {return x * 10;}multiply_by_ten > list(1, 2, 3); // returns list(10, 20, 30);");
-// parse_and_evaluate("math_abs > list(5, -10, 15, 20, -25); // returns list(5, 10, 15, 20, 25);");
-// parse_and_evaluate("(x => x * x) > list(1, 2, 3); // returns list(1, 4, 9);");
+// parse_and_evaluate("display(2>1);");//returns false
+// parse_and_evaluate("display('a'>'b');");//returns false
+// parse_and_evaluate("function multiply_by_ten(x) {return x * 10;}display(multiply_by_ten > list(1, 2, 3)); // returns list(10, 20, 30);");
+// parse_and_evaluate("display(math_abs > list(5, -10, 15, 20, -25)); // returns list(5, 10, 15, 20, 25);");
+// parse_and_evaluate("display((x => x * x) > list(1, 2, 3)); // returns list(1, 4, 9);");

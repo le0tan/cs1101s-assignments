@@ -361,7 +361,11 @@ function evaluate_sequence(stmts, env) {
         const first_stmt_value =
             evaluate(first_statement(stmts), env);
         if (is_return_value(first_stmt_value)) {
-            return first_stmt_value;
+            if(is_delayed_object(first_stmt_value)){
+                return evaluate_delayed_object(first_stmt_value);
+            } else {
+                return first_stmt_value;
+            }
         } else {
             return evaluate_sequence(
                 rest_statements(stmts), env);
@@ -448,7 +452,11 @@ function apply(fun, args) {
                     args,
                     function_object_environment(fun)));
         if (is_return_value(result)) {
-            return return_value_content(result);
+            if(is_delayed_object(result)){
+                return evaluate_delayed_object(result);
+            } else {
+                return return_value_content(result);
+            }
         } else {
             return undefined;
         }
@@ -484,13 +492,23 @@ function is_return_value(value) {
 }
 
 function return_value_content(value) {
-    return value.content;
+    const cur = value.content;
+    if(is_delayed_object(cur)){
+        return evaluate_delayed_object(cur);
+    } else {
+        return cur;
+    }
 }
 
 function evaluate_return_statement(stmt, env) {
-    return make_return_value(
-        evaluate(return_statement_expression(stmt),
-            env));
+    const exp = return_statement_expression(stmt);
+    if(is_self_evaluating(exp)){
+        return make_return_value(
+            evaluate(exp,
+                env));
+    } else {
+        return make_return_value(make_delayed_object(exp, env));
+    }
 }
 
 /* BLOCKS */
@@ -539,8 +557,15 @@ function assignment_right_hand_side(stmt) {
 // left-hand side name to the resulting value in the
 // environment 
 function evaluate_assignment(stmt, env) {
-    const value = evaluate(assignment_right_hand_side(stmt), env);
-    assign_name_to_value(assignment_name(stmt), value, env);
+    const rhs = assignment_right_hand_side(stmt);
+    let value = undefined;
+    if(is_self_evaluating(rhs)){
+        value = evaluate(rhs, env);
+        assign_name_to_value(assignment_name(stmt), value, env);
+    } else {
+        value = make_delayed_object(rhs, env);
+        assign_name_to_value(assignment_name(stmt), value, env);
+    }
     return value;
 }
 
@@ -886,30 +911,125 @@ function parse_and_evaluate(str) {
         the_global_environment);
 }
 
-// parse_and_evaluate('const a = 1;');
-// parse_and_evaluate("const f = t => t; const b = f(2); b;");
-// parse_and_evaluate("let x = 2;\
-// let y = x * x;\
-// x = 3;\
-// y;");
-// parse_and_evaluate("let x = 2;\
-// let y = 5;\
-// let z = 10;\
-// let temp1 = x * y;\
-// let temp2 = temp1 + z;\
-// display(temp1);\
-// display(temp2);\
-// x = 3;\
-// y = 6;\
-// z = 9;\
-// display(temp1);\
-// display(temp2);");
+// // parse_and_evaluate('const a = 1;');
+// // parse_and_evaluate("const f = t => t; const b = f(2); b;");
+// // parse_and_evaluate("let x = 2;\
+// // let y = x * x;\
+// // x = 3;\
+// // y;");
+// // parse_and_evaluate("let x = 2;\
+// // let y = 5;\
+// // let z = 10;\
+// // let temp1 = x * y;\
+// // let temp2 = temp1 + z;\
+// // display(temp1);\
+// // display(temp2);\
+// // x = 3;\
+// // y = 6;\
+// // z = 9;\
+// // display(temp1);\
+// // display(temp2);");
+// // parse_and_evaluate("let x = 2;\
+// // function f(y) {\
+// //     x = 3;\
+// //     display(y);\
+// //     return y;\
+// // }\
+// // let z = f(x);\
+// // x = 4;\
+// // display(z);");
 // parse_and_evaluate("let x = 2;\
 // function f(y) {\
 //     x = 3;\
-//     display(y);\
+//     display(y); \
 //     return y;\
 // }\
 // let z = f(x);\
 // x = 4;\
 // display(z);");
+
+// parse_and_evaluate("let x = 2; let y=x + 1; x=3; y;"); 
+// parse_and_evaluate("let x = 2;let y = x * x;x = 3;y;");
+// parse_and_evaluate("let x = 2;let y = 5;let z = 10;\
+// let temp1 = x * y;\
+// let temp2 = temp1 + z;\
+// display(temp1); \
+// display(temp2); \
+// x = 3;\
+// y = 6;\
+// z = 9;\
+// display(temp1); \
+// display(temp2);");
+
+parse_and_evaluate("\
+let x = 1;let y=2;\
+function f(a, b) {\
+    display(a);\
+    let x = 3;\
+    display(a);\
+    y = 4;\
+    display(b);\
+}\
+f(x,y);");
+// 1 1 4
+parse_and_evaluate("\
+let x=1;let y=2;\
+function f(x) {return x+10;}\
+let z=pair(f(x),y);\
+display(z);\
+x=2;\
+display(z);");
+//[11, 2]
+//[12, 2]
+
+parse_and_evaluate("\
+let x = 1;const y = x => x + 2;\
+x=3;\
+display(y(x));");
+//5
+parse_and_evaluate("\
+let x = 1;let a = 1;\
+let y = p => p + a;\
+let z = y(x);\
+display(z);\
+x = 10;\
+y = p => p * x;\
+display(z);");
+//2 100
+
+parse_and_evaluate("\
+let a = 10;\
+let x=(p=>p+a)(10);\
+display(x);\
+a=20;\
+display(x);");
+// 20 30
+parse_and_evaluate("\
+    let y = 10;let x = 10;\
+    function f(x){\
+        if(y>x) {y=x;return x;}\
+        else {return x+1;}\
+    }\
+    y=x+10;\
+    display(f(y));\
+    display(y);\
+    y=x;\
+    display(y);");
+//21 20 10
+parse_and_evaluate("\
+    let x=list(1,2,3);\
+    let y=pair(10,x);\
+    x=list(2,3);\
+    y;");
+//[10, [2, [3, []]]]
+parse_and_evaluate("let x = 100; let y = x; x = 10; display(y);");
+// 10
+parse_and_evaluate("\
+    let x =10;\
+    function f(){\
+        return x;\
+    }\
+    let p=f();\
+    x=20;\
+    display(p);");
+// 20

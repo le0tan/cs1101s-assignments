@@ -791,10 +791,10 @@ function parse_and_evaluate(str) {
 			     the_global_environment);
 }
 
-// parse_and_evaluate("list(1)+list(2);");
-// parse_and_evaluate("'a'+'b';");
+// parse_and_evaluate("display(list(1)+list(2));");//returns list(1,2)
+// parse_and_evaluate("display('a'+'b');");//returns "ab"
 // parse_and_evaluate("\
 // const a = list(1,2);\
 // const b = list(3,4);\
 // display(a+b);\
-// display(1+1);");
+// display(1+1);");//returns list(1,2,3,4), 2

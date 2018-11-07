@@ -337,9 +337,45 @@ function num_of_matches(a, b){
 num_of_matches(list(1,2,3,4),list(1,2,3));
 
 //q5
-function all_pairings(n){
-    //to-do
+function all_pairings(n) {
+    function _map(f, xs) {
+        function h(lst, ans) {
+            if (is_empty_list(lst)) {
+                return ans;
+            } else {
+                return h(tail(lst), pair(f(head(lst)), ans));
+            }
+        }
+        return h(reverse(xs), []);
+    }
+
+    function list_gen(x, ans) {
+        if (x === 0) {
+            return ans;
+        } else {
+            return list_gen(x - 1, pair(x, ans));
+        }
+    }
+
+    function h(lst) {
+        if (is_empty_list(lst)) {
+            return list([]);
+        } else {
+            return accumulate(append,
+                [],
+                _map(
+                    x =>
+                    (_map(t => pair(head(x), t), h(tail(x)))),
+                    _map(
+                        x =>
+                        pair(pair(head(lst), x), filter(t => t !== x, tail(lst))),
+                        tail(lst))));
+        }
+    }
+    return h(list_gen(n, []));
 }
+
+all_pairings(6);
 
 //2.3
 //q1
@@ -415,37 +451,33 @@ function solvable(xs, n){
 // solvable(list(3,5,8,4,2,7,1,6),3);
 
 //q3.1
-function reorder(xs){
-    function ref_head(xs, n){
-        if(n === 0){
-            return xs;
-        } else {
-            return ref_head(tail(xs), n-1);
-        }
+function ref_head(xs, n){
+    if(n === 0){
+        return xs;
+    } else {
+        return ref_head(tail(xs), n-1);
     }
-    const is_even = t => (t % 2 === 0);
-    let pos = 0;
-    let cur_val = list_ref(xs, pos);
-    const len = length(xs);
-    for(let i = 0; i < len; i = i + 1){
-        if(is_even(pos)){
-            // this number should go to pos/2 - 1
-            const tar_index = pos/2 + len;
-            const tar_val = list_ref(xs, tar_index);
-            set_head(ref_head(xs, tar_index), cur_val);
-            cur_val = tar_val;
-            pos = tar_index;
-        } else {
-            // this number should go to (pos-1+len)/2
-            const tar_index = (pos-1)/2;
-            const tar_val = list_ref(xs, tar_index);
-            set_head(ref_head(xs, tar_index), cur_val);
-            cur_val = tar_val;
-            pos = tar_index;
-        }
-    }
-    return xs;
 }
+
+function swap(a, b, xs){
+    const t = list_ref(xs, a);
+    set_head(ref_head(xs, a), list_ref(xs, b));
+    set_head(ref_head(xs, b), t);
+}
+
+function reorder(lst){
+    const len = length(lst);
+    for(let i = 0; i < len/2 - 1; i = i + 1){
+        for(let j = i; j <= len-2; j = j + 2){
+            swap(j, j+1, lst);
+        }
+    }
+    swap(len/2 - 1, len/2, lst);
+    return lst;
+}
+
+const a = list(1,2,3,4,5,6,7,8);
+reorder(a);
 //q3.2
 function rotate(lst, k){
     if(k === 0){
