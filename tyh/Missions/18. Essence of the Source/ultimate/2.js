@@ -724,9 +724,9 @@ function make_empty_frame() {
 const the_empty_environment = [];
 
 function new_op(x, y) {
-    // display(x.tag);
+    // two forms of function works: custom function or built-in function
     if ((is_function_object(x) || is_builtin_function(x)) && is_list(y)) {
-        return map(t => apply(x, list(t)), y);
+        return map(t => apply(x, list(t)), y);  // apply the map function
     } else {
         return x > y;
     }
@@ -792,7 +792,7 @@ function parse_and_evaluate(str) {
 			     the_global_environment);
 }
 
-// parse_and_evaluate("display(2>1);");//returns false
+// parse_and_evaluate("display(2>1);");//returns true
 // parse_and_evaluate("display('a'>'b');");//returns false
 // parse_and_evaluate("function multiply_by_ten(x) {return x * 10;}display(multiply_by_ten > list(1, 2, 3)); // returns list(10, 20, 30);");
 // parse_and_evaluate("display(math_abs > list(5, -10, 15, 20, -25)); // returns list(5, 10, 15, 20, 25);");

@@ -112,7 +112,7 @@ function evaluate_delayed_object(obj){
 // first (innermost) frame
 function evaluate_constant_declaration(stmt, env) {
     if(!is_self_evaluating(stmt.value)){
-        // lookup_name_value('f', env);
+        // if the rvalue is not self-evaluating, delay its evaluation
         declare_constant(constant_declaration_name(stmt),
         make_delayed_object(stmt.value, env),
         env);
@@ -507,6 +507,7 @@ function evaluate_return_statement(stmt, env) {
             evaluate(exp,
                 env));
     } else {
+        // if the rvalue is not self-evaluating, delay its evaluation
         return make_return_value(make_delayed_object(exp, env));
     }
 }
@@ -563,6 +564,7 @@ function evaluate_assignment(stmt, env) {
         value = evaluate(rhs, env);
         assign_name_to_value(assignment_name(stmt), value, env);
     } else {
+        // if the rvalue is not self-evaluating, delay its evaluation
         value = make_delayed_object(rhs, env);
         assign_name_to_value(assignment_name(stmt), value, env);
     }
@@ -826,6 +828,9 @@ function evaluate(stmt, env) {
         return evaluate_while_loop(stmt, env);
     } else if (is_for_loop(stmt)) {
         return evaluate_for_loop(stmt, env);
+    } else if(is_delayed_object(stmt)){
+        // just in case a delayed object falls into evaluate()...
+        return evaluate_delayed_object(stmt);
     } else {
         error("Unknown expression type in evaluate: " +
             stringify(stmt));
