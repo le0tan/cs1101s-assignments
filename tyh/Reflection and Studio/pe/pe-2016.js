@@ -263,46 +263,46 @@ function build_BAE_tree(bae_list){
     function is_op(x){
         return x === '+' || x === '-' || x === '*' || x === '/';
     }
-    function find(xs, ans){
-        if(head(xs) === ')'){
-            return pair(tail(xs), ans);
-        } else {
-            // display(pair(head(xs), ans));
-            return find(tail(xs), pair(head(xs), ans));
+    function find_right(lst){
+        function helper(xs, n, res){
+            if(head(xs) === '('){
+                return helper(tail(xs), n+1, pair(head(xs), res));
+            } else if(head(xs) === ')'){
+                if(n-1 === 0){
+                    return pair(tail(reverse(res)), tail(xs));
+                } else {
+                    return helper(tail(xs), n-1, pair(head(xs), res));
+                }
+            } else {
+                return helper(tail(xs), n, pair(head(xs), res));
+            }
         }
+        return helper(lst,0,[]);
     }
-    // display('build');
-    // display(bae_list);
     if(is_number(bae_list)){
         return bae_list;
     } else {
         if(head(bae_list) === '('){
-            const t = reverse(tail(bae_list));
-            const a = find(t, []);
-            const rem = reverse(head(a));
-            // display('rem');
-            // display(rem);
-            // display('t');
-            // display(tail(a));
-            const left = build_BAE_tree(rem);
-            if(is_empty_list(tail(a))){
-                return left;
+            const res = find_right(bae_list);
+            const left = head(res);
+            const right = tail(res);
+            if(is_empty_list(right)){
+                return build_BAE_tree(left);
             } else {
-                const right = build_BAE_tree(tail(tail(a)));
-                return list(left, head(tail(a)), right);
+                return list(build_BAE_tree(left), head(right), build_BAE_tree(tail(right)));
             }
         } else if(is_number(head(bae_list))){
-            // display('a');
             if(is_empty_list(tail(bae_list))){
                 return head(bae_list);
             } else {
                 return list(head(bae_list), head(tail(bae_list)), build_BAE_tree(head(tail(tail(bae_list)))));
             }
-        } else {}
+        } else { }
     }
 }
-// const bae_list = list(1,'+',2);
-const bae_list = list("(", "(", 2, "+", 5, ")", "*", 100, ")");
+// const bae_list = list(123);
+// const bae_list = list("(", "(", 2, "+", 5, ")", "*", 100, ")");
+const bae_list = list('(','(','(',1,'+',1,')','*',2,')','+','(',10,'*',2,')',')');
 display(build_BAE_tree(bae_list));
 // display(build_BAE_tree(list(123)));
 
@@ -310,9 +310,11 @@ function evaluate_BAE(bae_list){
     return evaluate_BAE_tree(build_BAE_tree(bae_list));
 }
 
+display(evaluate_BAE(bae_list));
+
 function check_parentheses(paren_list){
     function helper(xs, n){
-        if(is_empty_list(xs)){
+        if(is_empty_list(xs) || n < 0){
             return n;
         } else {
             const t = head(xs);
@@ -326,5 +328,5 @@ function check_parentheses(paren_list){
     return helper(paren_list, 0) === 0;
 }
 
-const paren_list = list("(", "(", ")", "(");
+const paren_list = list(")", "(", ")", "(");
 check_parentheses(paren_list);
