@@ -39,7 +39,11 @@ const m_integers = m_integers_from(1);
 //stream_ref(m_integers, 5);
 //stream_ref(m_integers, 5);
 
+// Usage of the memo_fun function
 
+function fib_gen(a, b){
+    return pair(a, memo_fun(() => fib_gen(b, a+b)));
+}
 
 
 /***************************************

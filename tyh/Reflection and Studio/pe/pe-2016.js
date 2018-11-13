@@ -147,8 +147,7 @@ function all_different(nums){
     if(is_empty_list(nums)){
         return true;
     } else {
-        const t = map(x => x === head(nums), tail(nums));
-        const g = filter(x => x === true, t);
+        const g = filter(x => x === head(nums), tail(nums));
         if(is_empty_list(g)){
             return all_different(tail(nums));
         } else {
