@@ -45,6 +45,16 @@ function fib_gen(a, b){
     return pair(a, memo_fun(() => fib_gen(b, a+b)));
 }
 
+function f(x, guess){
+    // Newton method
+    return pair(guess, memo_fun(() => f(x, (improve(guess, x)+guess)/2)));
+}
+
+const a = f(2,1);
+
+eval_stream(a, 10);
+eval_stream(a, 15);
+
 
 /***************************************
  * Memoized search

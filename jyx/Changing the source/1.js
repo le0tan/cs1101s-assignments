@@ -896,3 +896,4 @@ function parse_and_evaluate(str) {
 
 
 
+parse_and_evaluate("let a = 1; a = a + 1; display(a);");
