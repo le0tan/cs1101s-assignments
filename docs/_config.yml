@@ -22,7 +22,7 @@ url: "https://le0tan.github.io" # the base hostname & protocol for your site, e.
 
 # Build settings
 markdown: kramdown
-theme: jekyll-theme-architect
+theme: jekyll-theme-cayman
 plugins:
   - jekyll-feed
 
