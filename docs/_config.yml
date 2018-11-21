@@ -17,8 +17,8 @@ title: AY18/19 Sem 1 CS1101S
 email: leotan.yh@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   This keeps an archive of answers and discussions upon assignments from CS1101S that's taught in AY18/19 Sem 1.
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/cs1101s-assignments" # the subpath of your site, e.g. /blog
+url: "https://le0tan.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
 markdown: kramdown
